@@ -1,0 +1,50 @@
+<html>
+    <style>
+    canvas {
+        /* border: 5px solid #f00; */
+        margin-left: auto;
+        margin-right: auto;
+        display: block;
+    }
+    .center{
+        display: block;
+        margin: auto;
+    }
+    </style>
+
+    <body>
+        <div class="center">
+            <input type="file" id="myfile" name="myfile" class="center">
+            <br>
+            <button id="submit" class="center">Click to raytrace</button>
+        </div>
+        <br>
+        <br>
+        <canvas id="canvas" width="400" height="400"></canvas>
+        <script type="module" src='main.js'></script>
+        <button id="download" class="center">Download Image</button>
+        <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = 'black';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        document.getElementById('download').addEventListener('click', () => {
+          const dataURL = canvas.toDataURL('image/png');
+
+          const downloadLink = document.createElement('a');
+          downloadLink.href = dataURL;
+
+          let filename = "filename.png"
+          if (document.getElementById('myfile').files.length > 0)
+          {
+            filename = document.getElementById('myfile').files[0].name
+          }
+
+          downloadLink.download = filename.slice(0,-3) + '.png';
+
+          downloadLink.click();
+        });
+        </script>
+    </body>
+</html>
