@@ -12,7 +12,8 @@
       "radius": 6,
       "ambient": [0.75,0.5,0.25],
       "diffuse": [0.75,0.5,0.25],
-      "specular": [0.75,0.75,0.75],
+      "specular": [0.2,0.2,0.2],
+      "mirror": [0,0,0],
       "phong_exponent": 20
     },
     {
@@ -22,6 +23,7 @@
       "ambient": [0.125,0.125,0.125],
       "diffuse": [0.5,0.5,0.5],
       "specular": [0.1,0.1,0.1],
+      "mirror": [0.2,0.2,0.2],
       "phong_exponent": 0
     }
   ],

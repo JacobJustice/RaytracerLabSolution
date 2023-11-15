@@ -158,7 +158,7 @@ function colorPixel(hitPoint, lights, surfaces, eye, rayDir, hit, iter)
     })
 
     // Ideal Specular Reflection
-    if (colorIsNotBlack(hit.surface.specular) && iter < 20)
+    if (colorIsNotBlack(hit.surface.mirror) && iter < 20)
     {
         let nDir = hit.surface.normal(hitPoint)
         let reflectDir = rayDir.subtract(nDir.scaleBy(2*rayDir.dotProduct(nDir))).normalize()
@@ -169,9 +169,9 @@ function colorPixel(hitPoint, lights, surfaces, eye, rayDir, hit, iter)
             let reflectHit = reflectHits[ind]
             let reflectHitPoint = hitPoint.add(reflectDir.scaleBy(reflectHit.t))
             let reflectColor = colorPixel(reflectHitPoint, lights, surfaces, hitPoint, reflectDir, reflectHit, iter+1)
-            outColor = outColor.add({components:[(reflectColor[0]*hit.surface.specular[0]),
-                                      (reflectColor[1]*hit.surface.specular[1]),
-                                      (reflectColor[2]*hit.surface.specular[2])]})
+            outColor = outColor.add({components:[(reflectColor[0]*hit.surface.mirror[0]),
+                                                 (reflectColor[1]*hit.surface.mirror[1]),
+                                                 (reflectColor[2]*hit.surface.mirror[2])]})
         }
     }
     return outColor.components

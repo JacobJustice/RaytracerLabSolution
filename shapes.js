@@ -6,6 +6,7 @@ class Primitive
         this.ambient =  object.ambient
         this.diffuse =  object.diffuse
         this.specular = object.specular
+        this.mirror = object.mirror
         this.phong_exponent = object.phong_exponent
     }
 
