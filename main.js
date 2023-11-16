@@ -23,9 +23,6 @@ document.getElementById('submit').onclick = async function() {
     scene = await parseJsonFile(myfile.files[0])
     raytrace(scene)
 }
-
-console.log(await parseOBJFile('./obj/bunny.obj'))
-
 // -------- DO NOT EDIT ABOVE --------
 
 function raytrace(scene){

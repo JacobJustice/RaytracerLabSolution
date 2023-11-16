@@ -13,7 +13,7 @@ function imageDataFromCanvas(canvas, scene) {
     var canvas = document.getElementById('canvas')
     canvas.width = scene.width
     canvas.height = scene.height
-    var ctx = canvas.getContext('2d', {willReadFrequently : true})
+    var ctx = canvas.getContext('2d')
     var imageData = ctx.getImageData(0,0, scene.width, scene.height)
     return [imageData, ctx]
 }
