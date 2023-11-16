@@ -47,8 +47,7 @@ class Sphere extends Primitive
                 t_ = (-d_dot_emc + Math.pow(discriminant,0.5))/d_dot_d
             }
         }
-
-        return new Hit(t_, this)
+        else return new Hit(t_, this)
     }
     normal(hitPoint)
     {
@@ -94,6 +93,46 @@ class Triangle extends Primitive
     constructor(object)
     {
         super(object)
+        this.pointA = object.pointA
+        this.pointB = object.pointB
+        this.pointC = object.pointC
+        this.n = new Vector(this.pointA).crossProduct(new Vector(this.pointB))
+    }
+    
+    raycast(eye, rayDir, d_dot_d)
+    {
+        let a = this.pointA[0] - this.pointB[0]
+        let b = this.pointA[1] - this.pointB[1]
+        let c = this.pointA[2] - this.pointB[2]
+        let d = this.pointA[0] - this.pointC[0]
+        let e = this.pointA[1] - this.pointC[1]
+        let f = this.pointA[2] - this.pointC[2]
+        let g = rayDir.components[0]
+        let h = rayDir.components[1]
+        let i = rayDir.components[2]
+        let j = this.pointA[0] - eye.components[0]
+        let k = this.pointA[1] - eye.components[1]
+        let l = this.pointA[2] - eye.components[2]
+
+        let ei_minus_hf = e*i - h*f
+        let jc_minus_al = j*c - a*l
+        let bl_minus_kc = b*l - k*c
+        let dh_minus_eg = d*h - e*g
+
+
+        let M = a*ei_minus_hf + 
+
+        let t = f*(ei_minus_hf) + e(jc_minus_al) + d*(bl_minus_kc)
+        let beta = -1
+        let gamma = -1
+        
+        return new Hit(t, this)
+    }
+
+    normal(hitPoint)
+    {
+
+        return this.n
     }
 }
 
@@ -113,8 +152,11 @@ class Hit
         this.surface = surfaceRef
     }
 }
+
 export{
     Sphere,
+    Triangle,
+    Mesh,
     Plane,
     Light
 }
