@@ -1,3 +1,5 @@
+import {OBJFile} from './library/OBJFile.js'
+
 async function parseJsonFile(file) {
     return new Promise((resolve, reject) => {
       const fileReader = new FileReader()
@@ -14,6 +16,22 @@ function imageDataFromCanvas(canvas, scene) {
     var ctx = canvas.getContext('2d', {willReadFrequently : true})
     var imageData = ctx.getImageData(0,0, scene.width, scene.height)
     return [imageData, ctx]
+}
+
+async function loadOBJFile(filePath) {
+    try{
+        const response = await fetch(filePath)
+        const textString = await response.text()
+        return textString
+    }
+    catch (error) {
+        console.error('Error:', error)
+    }
+}
+
+async function parseOBJFile(filePath) {
+    let contents = await loadOBJFile(filePath)
+    return new OBJFile(contents).parse()
 }
   
 function createImage(width, height){
@@ -33,5 +51,6 @@ function createImage(width, height){
 
 export {
     parseJsonFile,
+    parseOBJFile,
     imageDataFromCanvas
 }

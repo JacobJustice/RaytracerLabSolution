@@ -80,6 +80,23 @@ class Plane extends Primitive
     }
 }
 
+class Mesh extends Primitive
+{
+    constructor(object, root)
+    {
+        super(object)
+        this.root = root
+    }
+}
+
+class Triangle extends Primitive
+{
+    constructor(object)
+    {
+        super(object)
+    }
+}
+
 class Light
 {
     constructor(object)

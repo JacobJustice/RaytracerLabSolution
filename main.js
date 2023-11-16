@@ -1,7 +1,8 @@
-import {parseJsonFile, imageDataFromCanvas} from './helper.js'
+import {parseJsonFile, imageDataFromCanvas, parseOBJFile} from './helper.js'
 import {Vector} from './library/vector.js'
 import { EPSILON } from './library/constants.js'
 import {Light, Sphere, Plane} from './shapes.js'
+
 /*
 Author: Jacob Justice
 Assignment 01: Ray Tracing
@@ -13,15 +14,19 @@ It is a raytracer that operates on spheres and planes
 
 */
 
-var color = 0
 var AMBIENT_LIGHT=.2
 
+// -------- DO NOT EDIT  --------
 // on button click, load the scene file and raytrace that scene
 var scene = null;
 document.getElementById('submit').onclick = async function() {
     scene = await parseJsonFile(myfile.files[0])
     raytrace(scene)
 }
+
+console.log(await parseOBJFile('./obj/bunny.obj'))
+
+// -------- DO NOT EDIT ABOVE --------
 
 function raytrace(scene){
     var [imageData, ctx] = imageDataFromCanvas(document.getElementById('canvas'), scene)
