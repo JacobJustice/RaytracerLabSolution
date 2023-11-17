@@ -121,27 +121,39 @@ function raycastIntoScene(eye, rayDir, surfaces)
     return surface_hits
 }
 
+function ambient(surface)
+{
+    return new Vector(
+        surface.ambient[0]*AMBIENT_LIGHT*255,
+        surface.ambient[1]*AMBIENT_LIGHT*255,
+        surface.ambient[2]*AMBIENT_LIGHT*255)
+}
+function shadow(hitPoint, light)
+{
+    var l_dir = light.position.subtract(hitPoint)
+    let l_dist = l_dir.length()
+    l_dir = l_dir.normalize()
+    let inShadow = false
+
+    // check if a there is any object between the hitpoint and the current light
+    for (let i = 0; i < surfaces.length; i++){
+        let surfhit = surfaces[i].raycast(hitPoint, l_dir, l_dir.dotProduct(l_dir))
+        if ((surfhit.t > EPSILON) && (l_dist > surfhit.t)) {
+            return true
+        }
+    }
+    return false
+
+}
+
 function colorPixel(hitPoint, lights, surfaces, eye, rayDir, hit, iter)
 {
     // Ambient Shading
     // console.log(hit.surface)
-    let outColor = new Vector(
-        hit.surface.ambient[0]*AMBIENT_LIGHT*255,
-        hit.surface.ambient[1]*AMBIENT_LIGHT*255,
-        hit.surface.ambient[2]*AMBIENT_LIGHT*255)
+    let outColor = ambient(hit.surface)
 
-    var inShadow = false
     lights.forEach(function(light){
-        var l_dir = light.position.subtract(hitPoint)
-        let l_dist = l_dir.length()
-        l_dir = l_dir.normalize()
-
-        // check if a there is any object between the hitpoint and the current light
-        for (let i = 0; i < surfaces.length; i++){
-            let surfhit = surfaces[i].raycast(hitPoint, l_dir, l_dir.dotProduct(l_dir))
-            inShadow = (surfhit.t > EPSILON) && (l_dist > surfhit.t)
-            if (inShadow) {break}
-        }
+        let inShadow = shadow(hitPoint, light)
         if (!inShadow)
         {
             // console.log(hit)
@@ -161,25 +173,25 @@ function colorPixel(hitPoint, lights, surfaces, eye, rayDir, hit, iter)
                                                  (light.color[1]*hit.surface.specular[1]*(Math.max(0, n_dot_h))**hit.surface.phong_exponent)*255,
                                                  (light.color[2]*hit.surface.specular[2]*(Math.max(0, n_dot_h))**hit.surface.phong_exponent)*255]})
         }
-    })
-
-    // Ideal Specular Reflection
-    if (colorIsNotBlack(hit.surface.mirror) && iter < 20)
-    {
-        let nDir = hit.surface.normal(hitPoint)
-        let reflectDir = rayDir.subtract(nDir.scaleBy(2*rayDir.dotProduct(nDir))).normalize()
-        let reflectHits = raycastIntoScene(hitPoint, reflectDir, surfaces)
-        let ind = indexOfLowestNonNegativeValue(reflectHits)
-        if (ind != -1) 
+        // Ideal Specular Reflection
+        if (colorIsNotBlack(hit.surface.mirror) && iter < 20)
         {
-            let reflectHit = reflectHits[ind]
-            let reflectHitPoint = hitPoint.add(reflectDir.scaleBy(reflectHit.t))
-            let reflectColor = colorPixel(reflectHitPoint, lights, surfaces, hitPoint, reflectDir, reflectHit, iter+1)
-            outColor = outColor.add({components:[(reflectColor[0]*hit.surface.mirror[0]),
-                                                 (reflectColor[1]*hit.surface.mirror[1]),
-                                                 (reflectColor[2]*hit.surface.mirror[2])]})
+            let nDir = hit.surface.normal(hitPoint)
+            let reflectDir = rayDir.subtract(nDir.scaleBy(2*rayDir.dotProduct(nDir))).normalize()
+            let reflectHits = raycastIntoScene(hitPoint, reflectDir, surfaces)
+            let ind = indexOfLowestNonNegativeValue(reflectHits)
+            if (ind != -1) 
+            {
+                let reflectHit = reflectHits[ind]
+                let reflectHitPoint = hitPoint.add(reflectDir.scaleBy(reflectHit.t))
+                let reflectColor = colorPixel(reflectHitPoint, lights, surfaces, hitPoint, reflectDir, reflectHit, iter+1)
+                outColor = outColor.add({components:[(reflectColor[0]*hit.surface.mirror[0]),
+                                                     (reflectColor[1]*hit.surface.mirror[1]),
+                                                     (reflectColor[2]*hit.surface.mirror[2])]})
+            }
         }
-    }
+    })
+    
     return outColor.components
 }
 

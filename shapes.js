@@ -1,3 +1,4 @@
+import { EPSILON } from "./library/constants.js"
 import { Vector } from "./library/vector.js"
 class Primitive
 {
@@ -47,7 +48,7 @@ class Sphere extends Primitive
                 t_ = (-d_dot_emc + Math.pow(discriminant,0.5))/d_dot_d
             }
         }
-        else return new Hit(t_, this)
+        return new Hit(t_, this)
     }
     normal(hitPoint)
     {
@@ -99,7 +100,8 @@ class Triangle extends Primitive
         this.n = new Vector(this.pointA).crossProduct(new Vector(this.pointB))
     }
     
-    raycast(eye, rayDir, d_dot_d)
+    // implemented using Cramer's Rule, there are other ways but this is the fastest supposedly
+    raycast(eye, rayDir, d_dot_d, t_min = Infinity, t_max = Infinity)
     {
         let a = this.pointA[0] - this.pointB[0]
         let b = this.pointA[1] - this.pointB[1]
@@ -118,20 +120,31 @@ class Triangle extends Primitive
         let jc_minus_al = j*c - a*l
         let bl_minus_kc = b*l - k*c
         let dh_minus_eg = d*h - e*g
+        let gf_minus_di = g*f - d*i
+        let ak_minus_jb = a*k - j*b
 
-
-        let M = a*ei_minus_hf + 
-
-        let t = f*(ei_minus_hf) + e(jc_minus_al) + d*(bl_minus_kc)
-        let beta = -1
-        let gamma = -1
+        let M = a*ei_minus_hf + b*gf_minus_di + c*dh_minus_eg
+        let t = (f*ak_minus_jb+ e*jc_minus_al + d*bl_minus_kc)/M
+        if (t < EPSILON || t > t_max)
+        {
+            return new Hit(-1, this)
+        }
+        let gamma = (i*ak_minus_jb + h*jc_minus_al + g*bl_minus_kc)/M
+        if (gamma < 0 || gamma > 1)
+        {
+            return new Hit(-1,)
+        }
+        let beta = (j*ei_minus_hf + k*gf_minus_di + l*dh_minus_eg)/M
+        if (beta < 0 || beta > 1 - gamma)
+        {
+            return new Hit(-1, this)
+        }
         
         return new Hit(t, this)
     }
 
     normal(hitPoint)
     {
-
         return this.n
     }
 }
