@@ -49,8 +49,28 @@ function createImage(width, height){
     return img
 }
 
+function indexOfLowestNonNegativeValue(arr) {
+    let minIndex = -1;
+    let minValue = Infinity;
+    for (let i = 0; i < arr.length; i++) {
+        if (arr[i].t > EPSILON &&
+            arr[i].t < minValue) {
+          minValue = arr[i].t;
+          minIndex = i;
+        }
+    }
+    return minIndex;
+}
+
+function colorIsNotBlack(color)
+{
+    return (color[0]>0 && color[1]>0 && color[2]>0)
+}
+
 export {
     parseJsonFile,
     parseOBJFile,
-    imageDataFromCanvas
+    imageDataFromCanvas,
+    colorIsNotBlack,
+    indexOfLowestNonNegativeValue
 }

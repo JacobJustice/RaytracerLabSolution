@@ -1,7 +1,11 @@
-import {parseJsonFile, imageDataFromCanvas, parseOBJFile} from './helper.js'
+import {parseJsonFile
+    , imageDataFromCanvas
+    , parseOBJFile
+    , colorIsNotBlack
+    , indexOfLowestNonNegativeValue} from './helper.js'
 import {Vector} from './library/vector.js'
 import { EPSILON } from './library/constants.js'
-import {Light, Sphere, Plane, Triangle} from './shapes.js'
+import {Light, Sphere, Plane, Triangle, Mesh} from './shapes.js'
 
 /*
 Author: Jacob Justice
@@ -23,6 +27,7 @@ document.getElementById('submit').onclick = async function() {
     scene = await parseJsonFile(myfile.files[0])
     raytrace(scene)
 }
+console.log(await parseOBJFile('./obj/bunny.obj'))
 // -------- DO NOT EDIT ABOVE --------
 
 function raytrace(scene){
@@ -48,17 +53,19 @@ function raytrace(scene){
 
     var surfaces = []
     scene.surfaces.forEach(function(surface){
-        if (surface.type == "sphere")
-        {
-            surfaces.push(new Sphere(surface))
-        }
-        else if (surface.type == "plane")
-        {
-            surfaces.push(new Plane(surface, eye))
-        }
-        else if (surface.type == "triangle")
-        {
-            surfaces.push(new Triangle(surface, eye))
+        switch(surface.type) {
+            case("sphere"):
+                surfaces.push(new Sphere(surface))
+                break
+            case("plane"):
+                surfaces.push(new Plane(surface, eye))
+                break
+            case("triangle"):
+                surfaces.push(new Triangle(surface, eye))
+                break
+            case("mesh"):
+                surfaces.push(new Mesh(surface, eye))
+                break
         }
     })
     var lights = []
@@ -66,7 +73,6 @@ function raytrace(scene){
         lights.push(new Light(light))
     })
   
-
     // loop over every pixel
     for(let i = 0; i < imageData.data.length; i += 4) {
         // compute viewing ray
@@ -193,20 +199,3 @@ function colorPixel(hitPoint, lights, surfaces, eye, rayDir, hit, iter)
     return outColor.components
 }
 
-function colorIsNotBlack(color)
-{
-    return (color[0]>0 && color[1]>0 && color[2]>0)
-}
-
-function indexOfLowestNonNegativeValue(arr) {
-    let minIndex = -1;
-    let minValue = Infinity;
-    for (let i = 0; i < arr.length; i++) {
-        if (arr[i].t > EPSILON &&
-            arr[i].t < minValue) {
-          minValue = arr[i].t;
-          minIndex = i;
-        }
-    }
-    return minIndex;
-}

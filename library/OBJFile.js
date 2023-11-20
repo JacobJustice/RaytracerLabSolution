@@ -108,7 +108,7 @@ class OBJFile {
     const y = lineItems.length >= 3 ? parseFloat(lineItems[2]) : 0.0;
     const z = lineItems.length >= 4 ? parseFloat(lineItems[3]) : 0.0;
 
-    this._currentModel().vertices.push({ x, y, z });
+    this._currentModel().vertices.push([ x, y, z ]);
   }
 
   _parseTextureCoords(lineItems) {

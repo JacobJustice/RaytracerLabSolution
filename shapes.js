@@ -1,5 +1,7 @@
 import { EPSILON } from "./library/constants.js"
 import { Vector } from "./library/vector.js"
+import {indexOfLowestNonNegativeValue, parseOBJFile } from "./helper.js"
+
 class Primitive
 {
     constructor(object){
@@ -84,15 +86,6 @@ class Plane extends Primitive
     }
 }
 
-class Mesh extends Primitive
-{
-    constructor(object, root)
-    {
-        super(object)
-        this.root = root
-    }
-}
-
 class Triangle extends Primitive
 {
     constructor(object, eye)
@@ -158,6 +151,42 @@ class Triangle extends Primitive
     }
 }
 
+class Mesh extends Primitive
+{
+    constructor(object, eye)
+    {
+        super(object)
+        this.root = object.root
+        this.file = object.file
+        this.generateTriangleList(eye)
+    }
+    async generateTriangleList(eye)
+    {
+        this.tris = []
+        let objfile = await parseOBJFile(this.file)
+
+        objfile.models[0].faces.forEach(face => {
+            let surface = copyMaterial(this)
+            surface.type = "triangle"
+            surface.pointA = objfile.models[0].vertices[face.vertices[0].vertexIndex]
+            surface.pointB = objfile.models[0].vertices[face.vertices[1].vertexIndex]
+            surface.pointC = objfile.models[0].vertices[face.vertices[2].vertexIndex]
+            this.tris.push(new Triangle(surface, eye))
+        });
+    }
+    raycast(eye, rayDir, d_dot_d)
+    {
+        let tri_hits = []
+        console.log(this.tris)
+        this.tris.forEach(tri => {
+            tri_hits.push(tri.rayCast(eye, rayDir, d_dot_d))
+        })
+
+        let t_ind = indexOfLowestNonNegativeValue(tri_hits)
+        
+    }
+}
+
 class Light
 {
     constructor(object)
@@ -172,6 +201,17 @@ class Hit
     constructor(t, surfaceRef){
         this.t = t
         this.surface = surfaceRef
+    }
+}
+
+function copyMaterial(surface)
+{
+    return {
+        ambient : surface.ambient,
+        diffuse : surface.diffuse,
+        specular : surface.specular,
+        mirror : surface.mirror,
+        phong_exponent : surface.phong_exponent
     }
 }
 
