@@ -48,7 +48,6 @@ function createImage(width, height){
   
     return img
 }
-
 function indexOfLowestNonNegativeValue(arr) {
     let minIndex = -1;
     let minValue = Infinity;
