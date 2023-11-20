@@ -54,11 +54,11 @@ function raytrace(scene){
         }
         else if (surface.type == "plane")
         {
-            surfaces.push(new Plane(surface))
+            surfaces.push(new Plane(surface, eye))
         }
         else if (surface.type == "triangle")
         {
-            surfaces.push(new Triangle(surface))
+            surfaces.push(new Triangle(surface, eye))
         }
     })
     var lights = []
@@ -128,13 +128,8 @@ function ambient(surface)
         surface.ambient[1]*AMBIENT_LIGHT*255,
         surface.ambient[2]*AMBIENT_LIGHT*255)
 }
-function shadow(hitPoint, light)
+function shadow(hitPoint, l_dir, l_dist, surfaces)
 {
-    var l_dir = light.position.subtract(hitPoint)
-    let l_dist = l_dir.length()
-    l_dir = l_dir.normalize()
-    let inShadow = false
-
     // check if a there is any object between the hitpoint and the current light
     for (let i = 0; i < surfaces.length; i++){
         let surfhit = surfaces[i].raycast(hitPoint, l_dir, l_dir.dotProduct(l_dir))
@@ -153,7 +148,10 @@ function colorPixel(hitPoint, lights, surfaces, eye, rayDir, hit, iter)
     let outColor = ambient(hit.surface)
 
     lights.forEach(function(light){
-        let inShadow = shadow(hitPoint, light)
+        var l_dir = light.position.subtract(hitPoint)
+        let l_dist = l_dir.length()
+        l_dir = l_dir.normalize()
+        let inShadow = shadow(hitPoint, l_dir, l_dist, surfaces)
         if (!inShadow)
         {
             // console.log(hit)

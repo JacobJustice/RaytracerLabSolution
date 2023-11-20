@@ -57,11 +57,15 @@ class Sphere extends Primitive
 }
 class Plane extends Primitive
 {
-    constructor(object)
+    constructor(object, eye)
     {
         super(object)
         this.point = new Vector(object.point)
         this.n = new Vector(object.normal)
+        if (eye.subtract(this.point).dotProduct(this.n) < 0)
+        {
+            this.n = this.n.negate()
+        }
     }
     raycast(eye, rayDir, d_dot_d)
     {
@@ -91,13 +95,18 @@ class Mesh extends Primitive
 
 class Triangle extends Primitive
 {
-    constructor(object)
+    constructor(object, eye)
     {
         super(object)
         this.pointA = object.pointA
         this.pointB = object.pointB
         this.pointC = object.pointC
-        this.n = new Vector(this.pointA).crossProduct(new Vector(this.pointB))
+
+        this.n = new Vector(this.pointB).crossProduct(new Vector(this.pointA)).normalize()
+        if (eye.subtract({components:this.pointA}).dotProduct(this.n) < 0)
+        {
+            this.n = this.n.negate()
+        }
     }
     
     // implemented using Cramer's Rule, there are other ways but this is the fastest supposedly
@@ -124,7 +133,7 @@ class Triangle extends Primitive
         let ak_minus_jb = a*k - j*b
 
         let M = a*ei_minus_hf + b*gf_minus_di + c*dh_minus_eg
-        let t = (f*ak_minus_jb+ e*jc_minus_al + d*bl_minus_kc)/M
+        let t = -(f*ak_minus_jb+ e*jc_minus_al + d*bl_minus_kc)/M
         if (t < EPSILON || t > t_max)
         {
             return new Hit(-1, this)
