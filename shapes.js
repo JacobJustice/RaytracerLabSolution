@@ -59,10 +59,10 @@ class Sphere extends Primitive
 }
 class Plane extends Primitive
 {
-    constructor(object, eye, material=null, point=null, n=null)
+    constructor(object, eye, point=null, n=null)
     {
         super(object)
-        if (material == null){
+        if (point == null){
             this.point = new Vector(object.point)
             this.n = new Vector(object.normal)
             if (eye.subtract(this.point).dotProduct(this.n) < 0)
@@ -222,28 +222,83 @@ class Box extends Primitive
         super(object)
         this.max = object.max //
         this.min = object.min // 
-        this.minX = new Plane(null, null, object, this.min, new Vector(1,0,0))
-        this.maxX = new Plane(null, null, object, this.max, new Vector(1,0,0))
-        this.minY = new Plane(null, null, object, this.min, new Vector(0,1,0))
-        this.maxY = new Plane(null, null, object, this.max, new Vector(0,1,0))
-        this.minZ = new Plane(null, null, object, this.min, new Vector(0,0,1))
-        this.maxZ = new Plane(null, null, object, this.max, new Vector(0,0,1))
+        this.flippedX = false
+        this.flippedY = false
+        this.flippedZ = false
     }
     raycast(eye, rayDir, d_dot_d)
     {
-        let t_minX = minX.raycast(eye, rayDir, d_dot_d)
-        let t_maxX = maxX.raycast(eye, rayDir, d_dot_d)
-        let t_minY = minY.raycast(eye, rayDir, d_dot_d)
-        let t_maxY = maxY.raycast(eye, rayDir, d_dot_d)
-        let t_minZ = minZ.raycast(eye, rayDir, d_dot_d)
-        let t_maxZ = maxZ.raycast(eye, rayDir, d_dot_d)
+        // check x_d, y_d, z_d etc.
+        let a = 1/rayDir.components[0]
+        if (a >= 0){
+            var t_minX = a*(this.min[0] - eye[0])
+            var t_maxX = a*(this.max[0] - eye[0])
+        }
+        else{
+            var t_minX = a*(this.max[0] - eye[0])
+            var t_maxX = a*(this.min[0] - eye[0])
+        }
 
+        a = 1/rayDir.components[1]
+        if (a >= 0){
+            var t_minY = a*(this.min[1] - eye[1])
+            var t_maxY = a*(this.max[1] - eye[1])
+        }
+        else{
+            var t_minY = a*(this.max[1] - eye[1])
+            var t_maxY = a*(this.min[1] - eye[1])
+        } 
 
+        a = 1/rayDir.components[2]
+        if (a >= 0){
+            var t_minZ = a*(this.min[2] - eye[2])
+            var t_maxZ = a*(this.max[2] - eye[2])
+        }
+        else{
+            var t_minZ = a*(this.max[2] - eye[2])
+            var t_maxZ = a*(this.min[2] - eye[2])
+        }
+        let hit = false
+
+        // if within the bounds of the polygons that make up the box
+        if (t_minX < t_maxY || t_minX < tmaxZ ||
+            t_minY < t_maxX || t_minX < tmaxZ ||
+            t_minZ < t_maxX || t_minX < tmaxY
+            )
+        {
+            if (t_minX < t_minY && t_minX < t_minZ)
+            {
+                if(!this.flippedX) {
+                    return new Hit(t_minX, new Plane(copyMaterial(this), eye, this.min, new Vector(1,0,0)))
+                }
+                else {
+                    return new Hit(t_minX, new Plane(copyMaterial(this), eye, this.min, new Vector(1,0,0)))
+                }
+            }
+            else if (t_minY < t_minX && t_minY < t_minZ)
+            {
+                if(!this.flippedY) {
+                    return new Hit(t_minY, new Plane(copyMaterial(this), eye, this.min, new Vector(1,0,0)))
+                }
+                else {
+                    return new Hit(t_minY, new Plane(copyMaterial(this), eye, this.min, new Vector(1,0,0)))
+                }
+            }
+            else
+            {
+                if(!this.flippedY) {
+                    return new Hit(t_minY, new Plane(copyMaterial(this), eye, this.min, new Vector(1,0,0)))
+                }
+                else {
+                    return new Hit(t_minY, new Plane(copyMaterial(this), eye, this.min, new Vector(1,0,0)))
+                }
+            }
+        }
         return new Hit(-1, this)
     }
     normal(hitPoint)
     {
-        return this.n
+        return new Vector(-1,-1,-1)
     }
 }
 
