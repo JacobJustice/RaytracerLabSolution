@@ -5,7 +5,8 @@ import {parseJsonFile
     , indexOfLowestNonNegativeValue} from './helper.js'
 import {Vector} from './library/vector.js'
 import { EPSILON } from './library/constants.js'
-import {Light, AABB, Sphere, Plane, Triangle, Mesh} from './shapes.js'
+import {Light, Sphere, Plane} from './shapes.js'
+import { Triangle, Mesh, AABB } from './mesh.js'
 
 /*
 Author: Jacob Justice
@@ -90,10 +91,10 @@ function raytrace(scene){
         var uScale = l + (r - l)*(pixel_i + .5)/scene.width
         var vScale = b + (t - b)*(pixel_j + .5)/scene.height
         var rayDir = forward.scaleBy(focalLength).add(right.scaleBy(uScale).add(eyeup.scaleBy(vScale)))
-        if (pixel_i == 50 && pixel_j == 50){
-            console.log("laser")
-            laser = true
-        }
+        // if (pixel_i == 200 && pixel_j == 200){
+        //     console.log("laser")
+        //     laser = true
+        // }
 
         let surface_hits = raycastIntoScene(eye, rayDir, surfaces)
         // set pixel color to value computed from hit point, light and n
@@ -101,7 +102,7 @@ function raytrace(scene){
         // console.log(t_ind)
         if (laser)
         {
-            imageData.data[i] = 255
+            imageData.data[i+1] = 255
             imageData.data[i+3] = 255
         }
         else if (t_ind != -1)
@@ -164,50 +165,50 @@ function shadow(hitPoint, l_dir, l_dist, surfaces)
 function colorPixel(hitPoint, lights, surfaces, eye, rayDir, hit, iter)
 {
     // Ambient Shading
-    // let outColor = ambient(hit.surface)
-    // lights.forEach(function(light){
-    //     var l_dir = light.position.subtract(hitPoint)
-    //     let l_dist = l_dir.length()
-    //     l_dir = l_dir.normalize()
-    //     let inShadow = shadow(hitPoint, l_dir, l_dist, surfaces)
-    //     if (!inShadow)
-    //     {
-    //         var nDir = hit.surface.normal(hitPoint)
-    //         var n_dot_l = nDir.dotProduct(l_dir)
-    //         // Lambertian Shading (diffuse)
-    //         outColor = outColor.add({components:[light.color[0]*hit.surface.diffuse[0]*Math.max(0, n_dot_l)*255,
-    //                                              light.color[1]*hit.surface.diffuse[1]*Math.max(0, n_dot_l)*255,
-    //                                              light.color[2]*hit.surface.diffuse[2]*Math.max(0, n_dot_l)*255]})
+    let outColor = ambient(hit.surface)
+    lights.forEach(function(light){
+        var l_dir = light.position.subtract(hitPoint)
+        let l_dist = l_dir.length()
+        l_dir = l_dir.normalize()
+        let inShadow = shadow(hitPoint, l_dir, l_dist, surfaces)
+        if (!inShadow)
+        {
+            var nDir = hit.surface.normal(hitPoint)
+            var n_dot_l = nDir.dotProduct(l_dir)
+            // Lambertian Shading (diffuse)
+            outColor = outColor.add({components:[light.color[0]*hit.surface.diffuse[0]*Math.max(0, n_dot_l)*255,
+                                                 light.color[1]*hit.surface.diffuse[1]*Math.max(0, n_dot_l)*255,
+                                                 light.color[2]*hit.surface.diffuse[2]*Math.max(0, n_dot_l)*255]})
         
-    //         // Specular Reflections
-    //         let v_vec = eye.subtract(hitPoint).normalize()
-    //         let v_add_l = v_vec.add(l_dir)
-    //         let h_vec = v_add_l.scaleBy(1/v_add_l.length()).normalize()
-    //         let n_dot_h = nDir.dotProduct(h_vec)
-    //         outColor = outColor.add({components:[(light.color[0]*hit.surface.specular[0]*(Math.max(0, n_dot_h))**hit.surface.phong_exponent)*255,
-    //                                              (light.color[1]*hit.surface.specular[1]*(Math.max(0, n_dot_h))**hit.surface.phong_exponent)*255,
-    //                                              (light.color[2]*hit.surface.specular[2]*(Math.max(0, n_dot_h))**hit.surface.phong_exponent)*255]})
-    //     }
-    //     // Ideal Specular Reflection
-    //     if (colorIsNotBlack(hit.surface.mirror) && iter < 20)
-    //     {
-    //         let nDir = hit.surface.normal(hitPoint)
-    //         let reflectDir = rayDir.subtract(nDir.scaleBy(2*rayDir.dotProduct(nDir))).normalize()
-    //         let reflectHits = raycastIntoScene(hitPoint, reflectDir, surfaces)
-    //         let ind = indexOfLowestNonNegativeValue(reflectHits)
-    //         if (ind != -1) 
-    //         {
-    //             let reflectHit = reflectHits[ind]
-    //             let reflectHitPoint = hitPoint.add(reflectDir.scaleBy(reflectHit.t))
-    //             let reflectColor = colorPixel(reflectHitPoint, lights, surfaces, hitPoint, reflectDir, reflectHit, iter+1)
-    //             outColor = outColor.add({components:[(reflectColor[0]*hit.surface.mirror[0]),
-    //                                                  (reflectColor[1]*hit.surface.mirror[1]),
-    //                                                  (reflectColor[2]*hit.surface.mirror[2])]})
-    //         }
-    //     }
-    // })
+            // Specular Reflections
+            let v_vec = eye.subtract(hitPoint).normalize()
+            let v_add_l = v_vec.add(l_dir)
+            let h_vec = v_add_l.scaleBy(1/v_add_l.length()).normalize()
+            let n_dot_h = nDir.dotProduct(h_vec)
+            outColor = outColor.add({components:[(light.color[0]*hit.surface.specular[0]*(Math.max(0, n_dot_h))**hit.surface.phong_exponent)*255,
+                                                 (light.color[1]*hit.surface.specular[1]*(Math.max(0, n_dot_h))**hit.surface.phong_exponent)*255,
+                                                 (light.color[2]*hit.surface.specular[2]*(Math.max(0, n_dot_h))**hit.surface.phong_exponent)*255]})
+        }
+        // Ideal Specular Reflection
+        if (colorIsNotBlack(hit.surface.mirror) && iter < 20)
+        {
+            let nDir = hit.surface.normal(hitPoint)
+            let reflectDir = rayDir.subtract(nDir.scaleBy(2*rayDir.dotProduct(nDir))).normalize()
+            let reflectHits = raycastIntoScene(hitPoint, reflectDir, surfaces)
+            let ind = indexOfLowestNonNegativeValue(reflectHits)
+            if (ind != -1) 
+            {
+                let reflectHit = reflectHits[ind]
+                let reflectHitPoint = hitPoint.add(reflectDir.scaleBy(reflectHit.t))
+                let reflectColor = colorPixel(reflectHitPoint, lights, surfaces, hitPoint, reflectDir, reflectHit, iter+1)
+                outColor = outColor.add({components:[(reflectColor[0]*hit.surface.mirror[0]),
+                                                     (reflectColor[1]*hit.surface.mirror[1]),
+                                                     (reflectColor[2]*hit.surface.mirror[2])]})
+            }
+        }
+    })
 
-    let outColor = hit.surface.normal(hitPoint).scaleBy(255)
+    // let outColor = hit.surface.normal(hitPoint).scaleBy(255)
 
     return outColor.components
     return new Vector(hit.surface.diffuse).scaleBy(255).components
