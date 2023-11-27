@@ -261,9 +261,9 @@ class Box extends Primitive
         let hit = false
 
         // if within the bounds of the polygons that make up the box
-        if (t_minX < t_maxY || t_minX < tmaxZ ||
-            t_minY < t_maxX || t_minX < tmaxZ ||
-            t_minZ < t_maxX || t_minX < tmaxY
+        if (t_minX < t_maxY || t_minX < t_maxZ ||
+            t_minY < t_maxX || t_minX < t_maxZ ||
+            t_minZ < t_maxX || t_minX < t_maxY
             )
         {
             if (t_minX < t_minY && t_minX < t_minZ)
@@ -278,19 +278,19 @@ class Box extends Primitive
             else if (t_minY < t_minX && t_minY < t_minZ)
             {
                 if(!this.flippedY) {
-                    return new Hit(t_minY, new Plane(copyMaterial(this), eye, this.min, new Vector(1,0,0)))
+                    return new Hit(t_minY, new Plane(copyMaterial(this), eye, this.min, new Vector(0,1,0)))
                 }
                 else {
-                    return new Hit(t_minY, new Plane(copyMaterial(this), eye, this.min, new Vector(1,0,0)))
+                    return new Hit(t_minY, new Plane(copyMaterial(this), eye, this.min, new Vector(0,1,0)))
                 }
             }
             else
             {
-                if(!this.flippedY) {
-                    return new Hit(t_minY, new Plane(copyMaterial(this), eye, this.min, new Vector(1,0,0)))
+                if(!this.flippedZ) {
+                    return new Hit(t_minZ, new Plane(copyMaterial(this), eye, this.min, new Vector(0,0,1)))
                 }
                 else {
-                    return new Hit(t_minY, new Plane(copyMaterial(this), eye, this.min, new Vector(1,0,0)))
+                    return new Hit(t_minZ, new Plane(copyMaterial(this), eye, this.min, new Vector(0,0,1)))
                 }
             }
         }
