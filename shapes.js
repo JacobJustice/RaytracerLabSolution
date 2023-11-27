@@ -215,7 +215,7 @@ class Mesh extends Primitive
     }
 }
 
-class Box extends Primitive
+class AABB extends Primitive
 {
     constructor(object, eye)
     {
@@ -231,34 +231,36 @@ class Box extends Primitive
         // check x_d, y_d, z_d etc.
         let a = 1/rayDir.components[0]
         if (a >= 0){
-            var t_minX = a*(this.min[0] - eye[0])
-            var t_maxX = a*(this.max[0] - eye[0])
+            var t_minX = a*(this.min[0] - eye.components[0])
+            var t_maxX = a*(this.max[0] - eye.components[0])
         }
         else{
-            var t_minX = a*(this.max[0] - eye[0])
-            var t_maxX = a*(this.min[0] - eye[0])
+            this.flippedX = true
+            var t_minX = a*(this.max[0] - eye.components[0])
+            var t_maxX = a*(this.min[0] - eye.components[0])
         }
 
         a = 1/rayDir.components[1]
         if (a >= 0){
-            var t_minY = a*(this.min[1] - eye[1])
-            var t_maxY = a*(this.max[1] - eye[1])
+            var t_minY = a*(this.min[1] - eye.components[1])
+            var t_maxY = a*(this.max[1] - eye.components[1])
         }
         else{
-            var t_minY = a*(this.max[1] - eye[1])
-            var t_maxY = a*(this.min[1] - eye[1])
+            this.flippedY = true
+            var t_minY = a*(this.max[1] - eye.components[1])
+            var t_maxY = a*(this.min[1] - eye.components[1])
         } 
 
         a = 1/rayDir.components[2]
         if (a >= 0){
-            var t_minZ = a*(this.min[2] - eye[2])
-            var t_maxZ = a*(this.max[2] - eye[2])
+            var t_minZ = a*(this.min[2] - eye.components[2])
+            var t_maxZ = a*(this.max[2] - eye.components[2])
         }
         else{
-            var t_minZ = a*(this.max[2] - eye[2])
-            var t_maxZ = a*(this.min[2] - eye[2])
+            this.flippedZ = true
+            var t_minZ = a*(this.max[2] - eye.components[2])
+            var t_maxZ = a*(this.min[2] - eye.components[2])
         }
-        let hit = false
 
         // if within the bounds of the polygons that make up the box
         if (t_minX < t_maxY || t_minX < t_maxZ ||
@@ -269,28 +271,28 @@ class Box extends Primitive
             if (t_minX < t_minY && t_minX < t_minZ)
             {
                 if(!this.flippedX) {
-                    return new Hit(t_minX, new Plane(copyMaterial(this), eye, this.min, new Vector(1,0,0)))
+                    return new Hit(t_minX, new Plane(copyMaterial(this), eye, this.min, [1,0,0]))
                 }
                 else {
-                    return new Hit(t_minX, new Plane(copyMaterial(this), eye, this.min, new Vector(1,0,0)))
+                    return new Hit(t_minX, new Plane(copyMaterial(this), eye, this.min, [1,0,0]))
                 }
             }
             else if (t_minY < t_minX && t_minY < t_minZ)
             {
                 if(!this.flippedY) {
-                    return new Hit(t_minY, new Plane(copyMaterial(this), eye, this.min, new Vector(0,1,0)))
+                    return new Hit(t_minY, new Plane(copyMaterial(this), eye, this.min, [0,1,0]))
                 }
                 else {
-                    return new Hit(t_minY, new Plane(copyMaterial(this), eye, this.min, new Vector(0,1,0)))
+                    return new Hit(t_minY, new Plane(copyMaterial(this), eye, this.min, [0,1,0]))
                 }
             }
             else
             {
                 if(!this.flippedZ) {
-                    return new Hit(t_minZ, new Plane(copyMaterial(this), eye, this.min, new Vector(0,0,1)))
+                    return new Hit(t_minZ, new Plane(copyMaterial(this), eye, this.min, [0,0,1]))
                 }
                 else {
-                    return new Hit(t_minZ, new Plane(copyMaterial(this), eye, this.min, new Vector(0,0,1)))
+                    return new Hit(t_minZ, new Plane(copyMaterial(this), eye, this.min, [0,0,1]))
                 }
             }
         }
@@ -334,6 +336,7 @@ export{
     Sphere,
     Triangle,
     Mesh,
+    AABB,
     Plane,
     Light
 }
