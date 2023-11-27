@@ -1,4 +1,5 @@
 import {OBJFile} from './library/OBJFile.js'
+import { EPSILON } from './library/constants.js'
 
 async function parseJsonFile(file) {
     return new Promise((resolve, reject) => {

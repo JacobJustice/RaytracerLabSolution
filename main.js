@@ -25,13 +25,17 @@ var AMBIENT_LIGHT=.2
 var scene = null;
 document.getElementById('submit').onclick = async function() {
     scene = await parseJsonFile(myfile.files[0])
+    scene.bunny = await parseOBJFile('./obj/bunny.obj')
+    scene.dodecahedron =await parseOBJFile('./obj/dodecahedron.obj')
+    console.time('raytrace')
     raytrace(scene)
+    console.timeEnd('raytrace')
 }
-console.log(await parseOBJFile('./obj/bunny.obj'))
 // -------- DO NOT EDIT ABOVE --------
 
 function raytrace(scene){
     var [imageData, ctx] = imageDataFromCanvas(document.getElementById('canvas'), scene)
+    console.log(scene)
 
     // run raytracing algorithm on the scene
     var eye = new Vector(scene.eye) // location of the eye
@@ -41,7 +45,7 @@ function raytrace(scene){
     var forwardDir = lookat.subtract(eye)
     var focalLength = forwardDir.length()// save for later use
     var forward = forwardDir.normalize() //-w
-    var right = up.crossProduct(forward).normalize().scaleBy(-1) // u
+    var right = forward.crossProduct(up).normalize() // u
     var eyeup = forward.crossProduct(right).normalize() // v
 
     var heightWidthRatio = scene.width/scene.height
@@ -64,7 +68,7 @@ function raytrace(scene){
                 surfaces.push(new Triangle(surface, eye))
                 break
             case("mesh"):
-                surfaces.push(new Mesh(surface, eye))
+                surfaces.push(new Mesh(surface, eye, scene[surface.obj]))
                 break
         }
     })
@@ -76,28 +80,35 @@ function raytrace(scene){
     // loop over every pixel
     for(let i = 0; i < imageData.data.length; i += 4) {
         // compute viewing ray
+        var laser = false
         var pixel_i = (i/4)%scene.width
         var pixel_j = Math.floor((i/4)/scene.width)
         var uScale = l + (r - l)*(pixel_i + .5)/scene.width
         var vScale = b + (t - b)*(pixel_j + .5)/scene.height
         var rayDir = forward.scaleBy(focalLength).add(right.scaleBy(uScale).add(eyeup.scaleBy(vScale)))
+        // if (pixel_i == 50 && pixel_j == 50){
+        //     console.log("laser")
+        //     laser = true
+        // }
 
         let surface_hits = raycastIntoScene(eye, rayDir, surfaces)
-    
-        // set pixel color to value computed from hit point, light and n
         // console.log(surface_hits)
+        // set pixel color to value computed from hit point, light and n
         var t_ind = indexOfLowestNonNegativeValue(surface_hits)
         // console.log(t_ind)
-        if (t_ind != -1)
+        if (laser)
+        {
+            imageData.data[i] = 255
+            imageData.data[i+3] = 255
+        }
+        else if (t_ind != -1)
         {
             let hitPoint = eye.add(rayDir.scaleBy(surface_hits[t_ind].t))
             let color = colorPixel(hitPoint, lights, surfaces, eye, rayDir, surface_hits[t_ind], 0)
-            // console.log("Color", color)
             imageData.data[i] = color[0]
             imageData.data[i + 1] = color[1]
             imageData.data[i + 2] = color[2]
             imageData.data[i + 3] = 255     
-            // break
         }
         else // ray hit no object, color background color
         {
@@ -150,9 +161,7 @@ function shadow(hitPoint, l_dir, l_dist, surfaces)
 function colorPixel(hitPoint, lights, surfaces, eye, rayDir, hit, iter)
 {
     // Ambient Shading
-    // console.log(hit.surface)
     let outColor = ambient(hit.surface)
-
     lights.forEach(function(light){
         var l_dir = light.position.subtract(hitPoint)
         let l_dist = l_dir.length()
@@ -160,7 +169,6 @@ function colorPixel(hitPoint, lights, surfaces, eye, rayDir, hit, iter)
         let inShadow = shadow(hitPoint, l_dir, l_dist, surfaces)
         if (!inShadow)
         {
-            // console.log(hit)
             var nDir = hit.surface.normal(hitPoint)
             var n_dot_l = nDir.dotProduct(l_dir)
             // Lambertian Shading (diffuse)
@@ -195,7 +203,10 @@ function colorPixel(hitPoint, lights, surfaces, eye, rayDir, hit, iter)
             }
         }
     })
-    
+
+    // let outColor = hit.surface.normal(hitPoint).scaleBy(255)
+
     return outColor.components
+    return new Vector(hit.surface.diffuse).scaleBy(255).components
 }
 

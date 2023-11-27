@@ -92,6 +92,14 @@ class Vector {
     const newComponents = multiplied[0].map((_, i) => sum(multiplied.map(column => column[i])))
     return new Vector(...newComponents)
   }
+  // 3D vectors only
+  multiply(other) {
+    return new Vector(
+      this.components[0] * other[0],
+      this.components[1] * other[1],
+      this.components[2] * other[2],
+    )
+  }
 }
 
 export {

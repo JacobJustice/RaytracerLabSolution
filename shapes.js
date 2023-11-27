@@ -59,14 +59,24 @@ class Sphere extends Primitive
 }
 class Plane extends Primitive
 {
-    constructor(object, eye)
+    constructor(object, eye, material=null, point=null, n=null)
     {
         super(object)
-        this.point = new Vector(object.point)
-        this.n = new Vector(object.normal)
-        if (eye.subtract(this.point).dotProduct(this.n) < 0)
-        {
-            this.n = this.n.negate()
+        if (material == null){
+            this.point = new Vector(object.point)
+            this.n = new Vector(object.normal)
+            if (eye.subtract(this.point).dotProduct(this.n) < 0)
+            {
+                this.n = this.n.negate()
+            }
+        }
+        else{
+            this.point = new Vector(point)
+            this.n = new Vector(n)
+            if (eye.subtract(this.point).dotProduct(this.n) < 0)
+            {
+                this.n = this.n.negate()
+            }
         }
     }
     raycast(eye, rayDir, d_dot_d)
@@ -95,8 +105,19 @@ class Triangle extends Primitive
         this.pointB = object.pointB
         this.pointC = object.pointC
 
-        this.n = new Vector(this.pointB).crossProduct(new Vector(this.pointA)).normalize()
-        if (eye.subtract({components:this.pointA}).dotProduct(this.n) < 0)
+        let A_C = new Vector(this.pointA).subtract(new Vector(this.pointC))
+        let B_C = new Vector(this.pointB).subtract(new Vector(this.pointC))
+
+        this.n = A_C.crossProduct(B_C).normalize().negate()
+
+        // console.log(this.pointA, this.pointB, this.pointC, this.n)
+        if (isNaN(this.n.components[0]) || isNaN(this.n.components[1]) || isNaN(this.n.components[2])) 
+        {
+            // console.log("nan detected")
+            this.n = new Vector(this.pointB).crossProduct(new Vector(this.pointC)).normalize()
+            // console.log(this.n)
+        }
+        if (eye.subtract(new Vector(this.pointA)).dotProduct(this.n) < 0)
         {
             this.n = this.n.negate()
         }
@@ -134,7 +155,7 @@ class Triangle extends Primitive
         let gamma = (i*ak_minus_jb + h*jc_minus_al + g*bl_minus_kc)/M
         if (gamma < 0 || gamma > 1)
         {
-            return new Hit(-1,)
+            return new Hit(-1,this)
         }
         let beta = (j*ei_minus_hf + k*gf_minus_di + l*dh_minus_eg)/M
         if (beta < 0 || beta > 1 - gamma)
@@ -153,37 +174,76 @@ class Triangle extends Primitive
 
 class Mesh extends Primitive
 {
-    constructor(object, eye)
+    constructor(object, eye, obj)
     {
         super(object)
-        this.root = object.root
-        this.file = object.file
-        this.generateTriangleList(eye)
+        this.root = new Vector(object.root)
+        this.scale = object.scale
+        this.generateTriangleList(eye, obj)
     }
-    async generateTriangleList(eye)
+    generateTriangleList(eye, obj)
     {
         this.tris = []
-        let objfile = await parseOBJFile(this.file)
 
-        objfile.models[0].faces.forEach(face => {
+        obj.models[0].faces.forEach(face => {
             let surface = copyMaterial(this)
             surface.type = "triangle"
-            surface.pointA = objfile.models[0].vertices[face.vertices[0].vertexIndex]
-            surface.pointB = objfile.models[0].vertices[face.vertices[1].vertexIndex]
-            surface.pointC = objfile.models[0].vertices[face.vertices[2].vertexIndex]
+            // console.log(obj.models[0].vertices,face)
+            surface.pointA = new Vector(obj.models[0].vertices[face.vertices[0].vertexIndex-1]).multiply(this.scale).add(this.root).components
+            surface.pointB = new Vector(obj.models[0].vertices[face.vertices[1].vertexIndex-1]).multiply(this.scale).add(this.root).components
+            surface.pointC = new Vector(obj.models[0].vertices[face.vertices[2].vertexIndex-1]).multiply(this.scale).add(this.root).components
             this.tris.push(new Triangle(surface, eye))
         });
+        // console.log(this.tris)
     }
     raycast(eye, rayDir, d_dot_d)
     {
         let tri_hits = []
-        console.log(this.tris)
         this.tris.forEach(tri => {
-            tri_hits.push(tri.rayCast(eye, rayDir, d_dot_d))
+            tri_hits.push(tri.raycast(eye, rayDir, d_dot_d))
         })
 
         let t_ind = indexOfLowestNonNegativeValue(tri_hits)
-        
+        if (t_ind != -1)
+        {
+            return tri_hits[t_ind]
+        }
+        else
+        {
+            return new Hit(-1,this)
+        }
+    }
+}
+
+class Box extends Primitive
+{
+    constructor(object, eye)
+    {
+        super(object)
+        this.max = object.max //
+        this.min = object.min // 
+        this.minX = new Plane(null, null, object, this.min, new Vector(1,0,0))
+        this.maxX = new Plane(null, null, object, this.max, new Vector(1,0,0))
+        this.minY = new Plane(null, null, object, this.min, new Vector(0,1,0))
+        this.maxY = new Plane(null, null, object, this.max, new Vector(0,1,0))
+        this.minZ = new Plane(null, null, object, this.min, new Vector(0,0,1))
+        this.maxZ = new Plane(null, null, object, this.max, new Vector(0,0,1))
+    }
+    raycast(eye, rayDir, d_dot_d)
+    {
+        let t_minX = minX.raycast(eye, rayDir, d_dot_d)
+        let t_maxX = maxX.raycast(eye, rayDir, d_dot_d)
+        let t_minY = minY.raycast(eye, rayDir, d_dot_d)
+        let t_maxY = maxY.raycast(eye, rayDir, d_dot_d)
+        let t_minZ = minZ.raycast(eye, rayDir, d_dot_d)
+        let t_maxZ = maxZ.raycast(eye, rayDir, d_dot_d)
+
+
+        return new Hit(-1, this)
+    }
+    normal(hitPoint)
+    {
+        return this.n
     }
 }
 
