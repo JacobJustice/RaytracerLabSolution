@@ -3,26 +3,29 @@ import { EPSILON } from './library/constants.js'
 import { indexOfLowestNonNegativeValue } from './helper.js'
 import { Vector } from './library/vector.js'
 
-class BVHNode
+var OPTIMIZATION = true
+
+class BVHNode extends Primitive
 {
-    constructor(triangles, object={ // use this weird default material properties to solve bad code design
-                              ambient: [0.9,0.3,0.3],
-                              diffuse: [0.9,0.3,0.3],
-                              specular: [0.2,0.2,0.2],
-                              mirror: [0,0,0],
-                              phong_exponent: 20,
-                              type:"aabb"})
+    constructor(triangles, axis = 0, object={ // use this weird default material properties to solve bad code design
+                                      ambient: [0.9,0.3,0.3],
+                                      diffuse: [0.9,0.3,0.3],
+                                      specular: [0.2,0.2,0.2],
+                                      mirror: [0,0,0],
+                                      phong_exponent: 20,
+                                      type:"bvhnode"})
     {
+        super(object)
         this.triangles = triangles
         this.calculateAABB(object)
-        // this.calculateChildren()
+        this.calculateChildren(object, axis)
     }
 
     calculateAABB(object)
     {
         let min = [Infinity,Infinity,Infinity]
         let max = [-Infinity,-Infinity,-Infinity]
-        console.log(this)
+        // console.log(this)
         this.triangles.forEach(tri => {
             tri.getPointList().forEach(point => {
                 for (let i = 0; i < point.length; i++)
@@ -43,24 +46,50 @@ class BVHNode
         this.aabb = new AABB(object)
     }
 
+    // calculates child nodes
+    calculateChildren(object, axis)
+    {
+        this.children = []
+        //decide which axis to split on
+        let trilen = this.triangles.length
+        if (trilen == 1)
+        {
+            this.children.push(this.triangles[0])
+        }
+        else if (trilen == 2)
+        {
+            this.children.push(this.triangles[0])
+            this.children.push(this.triangles[1])
+        }
+        else
+        {
+            // sort this.triangles along axis
+            this.triangles.sort((tri1, tri2) => {
+                return tri1[axis] - tri2[axis]
+            })
+            this.children.push(new BVHNode(this.triangles.slice(0, trilen/2), axis= (axis+1) % 3))
+            this.children.push(new BVHNode(this.triangles.slice(trilen/2), axis= (axis+1) % 3))
+        }
+    }
+
     raycast(eye, rayDir, d_dot_d)
     {
         if (this.aabb.raycast(eye, rayDir, d_dot_d).hit)
         {
-            let tri_hits = []
-            this.triangles.forEach(tri => {
-                tri_hits.push(tri.raycast(eye, rayDir, d_dot_d))
+            // 
+            let childHits = []
+            this.children.forEach(child => {
+                // console.log('child', child)
+                childHits.push(child.raycast(eye, rayDir, d_dot_d))
             })
-
-            let t_ind = indexOfLowestNonNegativeValue(tri_hits)
-            if (t_ind != -1)
+            // console.log(childHits)
+            let minT = indexOfLowestNonNegativeValue(childHits)
+            if (minT != -1)
             {
-                return tri_hits[t_ind]
+                return childHits[minT]
             }
-            else
-            {
-                return new Hit(-1,this)
-            }
+            return new Hit(-1, this)
+        
         }
         else return new Hit(-1, this)
     }
@@ -94,7 +123,24 @@ class Mesh extends Primitive
     }
     raycast(eye, rayDir, d_dot_d)
     {
-        return this.bvhtree.raycast(eye, rayDir, d_dot_d)
+        if (OPTIMIZATION)
+        {
+            return this.bvhtree.raycast(eye, rayDir, d_dot_d)
+        }
+        let tri_hits = []
+        this.triangles.forEach(tri => {
+            tri_hits.push(tri.raycast(eye, rayDir, d_dot_d))
+        })
+
+        let t_ind = indexOfLowestNonNegativeValue(tri_hits)
+        if (t_ind != -1)
+        {
+            return tri_hits[t_ind]
+        }
+        else
+        {
+            return new Hit(-1,this)
+        }
     }
 }
 
@@ -210,7 +256,7 @@ class Triangle extends Primitive
         this.pointA = object.pointA
         this.pointB = object.pointB
         this.pointC = object.pointC
-
+        this.center = [(this.pointA[0]+this.pointB[0]+this.pointC[0])/3, (this.pointA[1]+this.pointB[1]+this.pointC[1])/3, (this.pointA[2]+this.pointB[2]+this.pointC[2])/3]
         let A_C = new Vector(this.pointA).subtract(new Vector(this.pointC))
         let B_C = new Vector(this.pointB).subtract(new Vector(this.pointC))
 

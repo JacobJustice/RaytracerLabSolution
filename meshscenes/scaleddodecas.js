@@ -14,18 +14,18 @@
       "ambient": [0.93,0.58,0.93],
       "diffuse": [0.93,0.58,0.93],
       "specular": [0.2,0.2,0.2],
-      "mirror": [0,0,0],
+      "mirror": [0.2,0.2,0.2],
       "phong_exponent": 20
     },
     {
       "type": "mesh",
-      "root": [125,35,20],
+      "root": [135,25,20],
       "scale": [40,40,40],
       "obj": "dodecahedron",
       "ambient": [0.39,0.93,0.93],
       "diffuse": [0.39,0.93,0.93],
       "specular": [0.2,0.2,0.2],
-      "mirror": [0,0,0],
+      "mirror": [0.2,0.2,0.2],
       "phong_exponent": 20
     },
     {
@@ -36,7 +36,7 @@
       "ambient": [0.39,0.58,0.93],
       "diffuse": [0.39,0.58,0.93],
       "specular": [0.2,0.2,0.2],
-      "mirror": [0,0,0],
+      "mirror": [0.2,0.2,0.2],
       "phong_exponent": 20
     },
     {

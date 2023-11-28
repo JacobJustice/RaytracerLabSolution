@@ -1,6 +1,5 @@
 import {parseJsonFile
     , imageDataFromCanvas
-    , parseOBJFile
     , colorIsNotBlack
     , indexOfLowestNonNegativeValue} from './helper.js'
 import {Vector} from './library/vector.js'
@@ -8,12 +7,13 @@ import { EPSILON } from './library/constants.js'
 import {Light, Sphere, Plane} from './shapes.js'
 import { Triangle, Mesh, AABB } from './mesh.js'
 
+import { parseOBJFile } from './library/OBJFile.js'
 /*
 Author: Jacob Justice
-Assignment 01: Ray Tracing
+Assignment 03: Ray Tracing
 CGA
 
-This is the solution to the Assignment 01
+This is the solution to the Assignment 03
 
 It is a raytracer that operates on spheres and planes
 
@@ -29,12 +29,12 @@ document.getElementById('submit').onclick = async function() {
     scene.bunny = await parseOBJFile('./obj/bunny.obj')
     scene.dodecahedron =await parseOBJFile('./obj/dodecahedron.obj')
     console.time('raytrace')
-    raytrace(scene)
+    await raytrace(scene)
     console.timeEnd('raytrace')
 }
 // -------- DO NOT EDIT ABOVE --------
 
-function raytrace(scene){
+async function raytrace(scene){
     var [imageData, ctx] = imageDataFromCanvas(document.getElementById('canvas'), scene)
     console.log(scene)
 
@@ -76,12 +76,11 @@ function raytrace(scene){
                 break
         }
     })
-    console.log(surfaces)
     var lights = []
     scene.lights.forEach(function(light){
         lights.push(new Light(light))
     })
-  
+
     // loop over every pixel
     for(let i = 0; i < imageData.data.length; i += 4) {
         // compute viewing ray
@@ -91,9 +90,10 @@ function raytrace(scene){
         var uScale = l + (r - l)*(pixel_i + .5)/scene.width
         var vScale = b + (t - b)*(pixel_j + .5)/scene.height
         var rayDir = forward.scaleBy(focalLength).add(right.scaleBy(uScale).add(eyeup.scaleBy(vScale)))
-        // if (pixel_i == 200 && pixel_j == 200){
-        //     console.log("laser")
-        //     laser = true
+
+        // if (i % 8000 == 0)
+        // {
+        //     console.log("progress:", i/4, '/', imageData.data.length/4, "pixels")
         // }
 
         let surface_hits = raycastIntoScene(eye, rayDir, surfaces)
@@ -122,7 +122,6 @@ function raytrace(scene){
             imageData.data[i + 3] = 255; // alpha
         }
     }
-    // display image on canvas element
     ctx.putImageData(imageData, 0, 0)
 }
 

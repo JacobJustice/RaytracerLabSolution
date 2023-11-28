@@ -4,7 +4,7 @@
   "up": [0,1,0],
   "fov_angle": 50,
   "width" : 400,
-  "height": 300,
+  "height": 400,
   "surfaces": [
     {
       "type": "mesh",

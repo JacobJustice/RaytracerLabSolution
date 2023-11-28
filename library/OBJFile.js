@@ -206,7 +206,22 @@ class OBJFile {
     this.smoothingGroup = groupNumber;
   }
 }
+async function loadOBJFile(filePath) {
+    try{
+        const response = await fetch(filePath)
+        const textString = await response.text()
+        return textString
+    }
+    catch (error) {
+        console.error('Error:', error)
+    }
+}
+
+async function parseOBJFile(filePath) {
+    let contents = await loadOBJFile(filePath)
+    return new OBJFile(contents).parse()
+}
 
 export {
-  OBJFile
+  parseOBJFile
 }

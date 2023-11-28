@@ -1,6 +1,4 @@
-import { EPSILON } from "./library/constants.js"
 import { Vector } from "./library/vector.js"
-import {indexOfLowestNonNegativeValue, parseOBJFile } from "./helper.js"
 
 class Primitive
 {
