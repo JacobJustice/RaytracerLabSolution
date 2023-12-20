@@ -151,28 +151,18 @@ class AABB extends Primitive
         super(object)
         this.max = object.max 
         this.min = object.min  
-        this.minXPlane = new Plane(object, eye, this.min, [0,0,-1])
-        this.maxXPlane = new Plane(object, eye, this.max, [0,0,1])
-        this.minYPlane = new Plane(object, eye, this.min, [-1,0,0])
-        this.maxYPlane = new Plane(object, eye, this.max, [1,0,0])
-        this.minZPlane = new Plane(object, eye, this.min, [0,-1,0])
-        this.maxZPlane = new Plane(object, eye, this.max, [0,1,0])
         this.flippedX = false
         this.flippedY = false
         this.flippedZ = false
     }
     raycast(eye, rayDir, d_dot_d)
     {
-        let flippedX = false
-        let flippedY = false
-        let flippedZ = false
         let a = 1/rayDir.components[0]
         if (a >= 0){
             var t_minX = a*(this.min[0] - eye.components[0])
             var t_maxX = a*(this.max[0] - eye.components[0])
         }
         else{
-            flippedX = true
             var t_minX = a*(this.max[0] - eye.components[0])
             var t_maxX = a*(this.min[0] - eye.components[0])
         }
@@ -183,7 +173,6 @@ class AABB extends Primitive
             var t_maxY = a*(this.max[1] - eye.components[1])
         }
         else{
-            flippedY = true
             var t_minY = a*(this.max[1] - eye.components[1])
             var t_maxY = a*(this.min[1] - eye.components[1])
         } 
@@ -194,7 +183,6 @@ class AABB extends Primitive
             var t_maxZ = a*(this.max[2] - eye.components[2])
         }
         else{
-            flippedZ = true
             var t_minZ = a*(this.max[2] - eye.components[2])
             var t_maxZ = a*(this.min[2] - eye.components[2])
         }
@@ -210,36 +198,6 @@ class AABB extends Primitive
         else
         {
             return new Hit(1, this)
-            if (t_minX < t_minY && t_minX < t_minZ)
-            {
-                let hitPoint = eye.add(rayDir.scaleBy(t_minX))
-                if(!flippedX) {
-                    return new Hit(t_minX, this.minXPlane)
-                }
-                else {
-                    return new Hit(t_minX, this.maxXPlane)
-                }
-            }
-            else if (t_minY < t_minX && t_minY < t_minZ)
-            {
-                let hitPoint = eye.add(rayDir.scaleBy(t_minY))
-                if(!flippedY) {
-                    return new Hit(t_minY, this.minYPlane)
-                }
-                else {
-                    return new Hit(t_minY, this.maxYPlane)
-                }
-            }
-            else
-            {
-                let hitPoint = eye.add(rayDir.scaleBy(t_minZ))
-                if(!flippedZ) {
-                    return new Hit(t_minZ, this.minZPlane)
-                }
-                else {
-                    return new Hit(t_minZ, this.maxZPlane)
-                }
-            }
         }
     }
     normal(hitPoint)
@@ -256,19 +214,11 @@ class Triangle extends Primitive
         this.pointA = object.pointA
         this.pointB = object.pointB
         this.pointC = object.pointC
-        this.center = [(this.pointA[0]+this.pointB[0]+this.pointC[0])/3, (this.pointA[1]+this.pointB[1]+this.pointC[1])/3, (this.pointA[2]+this.pointB[2]+this.pointC[2])/3]
         let A_C = new Vector(this.pointA).subtract(new Vector(this.pointC))
         let B_C = new Vector(this.pointB).subtract(new Vector(this.pointC))
 
         this.n = A_C.crossProduct(B_C).normalize().negate()
 
-        // console.log(this.pointA, this.pointB, this.pointC, this.n)
-        if (isNaN(this.n.components[0]) || isNaN(this.n.components[1]) || isNaN(this.n.components[2])) 
-        {
-            // console.log("nan detected")
-            this.n = new Vector(this.pointB).crossProduct(new Vector(this.pointC)).normalize()
-            // console.log(this.n)
-        }
         if (eye.subtract(new Vector(this.pointA)).dotProduct(this.n) < 0)
         {
             this.n = this.n.negate()
