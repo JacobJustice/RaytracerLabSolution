@@ -5,207 +5,6 @@ import { Vector } from './library/vector.js'
 
 var OPTIMIZATION = true
 
-class BVHNode extends Primitive
-{
-    constructor(triangles, axis = 0, object={ // use this weird default material properties to solve bad code design
-                                      ambient: [0.9,0.3,0.3],
-                                      diffuse: [0.9,0.3,0.3],
-                                      specular: [0.2,0.2,0.2],
-                                      mirror: [0,0,0],
-                                      phong_exponent: 20,
-                                      type:"bvhnode"})
-    {
-        super(object)
-        this.triangles = triangles
-        this.calculateAABB(object)
-        this.calculateChildren(object, axis)
-    }
-
-    calculateAABB(object)
-    {
-        let min = [Infinity,Infinity,Infinity]
-        let max = [-Infinity,-Infinity,-Infinity]
-        // console.log(this)
-        this.triangles.forEach(tri => {
-            tri.getPointList().forEach(point => {
-                for (let i = 0; i < point.length; i++)
-                {
-                    if (point[i] < min[i])
-                    {
-                        min[i] = point[i]
-                    }
-                    if (point[i] > max[i])
-                    {
-                        max[i] = point[i]
-                    }
-                }
-            })
-        });
-        object.min = min
-        object.max = max
-        this.aabb = new AABB(object)
-    }
-
-    // calculates child nodes
-    calculateChildren(object, axis)
-    {
-        this.children = []
-        //decide which axis to split on
-        let trilen = this.triangles.length
-        if (trilen == 1)
-        {
-            this.children.push(this.triangles[0])
-        }
-        else if (trilen == 2)
-        {
-            this.children.push(this.triangles[0])
-            this.children.push(this.triangles[1])
-        }
-        else
-        {
-            // sort this.triangles along axis
-            this.triangles.sort((tri1, tri2) => {
-                return tri1[axis] - tri2[axis]
-            })
-            this.children.push(new BVHNode(this.triangles.slice(0, trilen/2), axis= (axis+1) % 3))
-            this.children.push(new BVHNode(this.triangles.slice(trilen/2), axis= (axis+1) % 3))
-        }
-    }
-
-    raycast(eye, rayDir, d_dot_d)
-    {
-        if (this.aabb.raycast(eye, rayDir, d_dot_d).hit)
-        {
-            // 
-            let childHits = []
-            this.children.forEach(child => {
-                // console.log('child', child)
-                childHits.push(child.raycast(eye, rayDir, d_dot_d))
-            })
-            // console.log(childHits)
-            let minT = indexOfLowestNonNegativeValue(childHits)
-            if (minT != -1)
-            {
-                return childHits[minT]
-            }
-            return new Hit(-1, this)
-        
-        }
-        else return new Hit(-1, this)
-    }
-}
-
-
-class Mesh extends Primitive
-{
-    constructor(object, eye, obj)
-    {
-        super(object)
-        this.root = new Vector(object.root)
-        this.scale = object.scale
-        this.generateTriangleList(eye, obj)
-        this.bvhtree = new BVHNode(this.triangles)
-    }
-    generateTriangleList(eye, obj)
-    {
-        this.triangles = []
-
-        obj.models[0].faces.forEach(face => {
-            let surface = copyMaterial(this)
-            surface.type = "triangle"
-            // console.log(obj.models[0].vertices,face)
-            surface.pointA = new Vector(obj.models[0].vertices[face.vertices[0].vertexIndex-1]).multiply(this.scale).add(this.root).components
-            surface.pointB = new Vector(obj.models[0].vertices[face.vertices[1].vertexIndex-1]).multiply(this.scale).add(this.root).components
-            surface.pointC = new Vector(obj.models[0].vertices[face.vertices[2].vertexIndex-1]).multiply(this.scale).add(this.root).components
-            this.triangles.push(new Triangle(surface, eye))
-        });
-        // console.log(this.tris)
-    }
-    raycast(eye, rayDir, d_dot_d)
-    {
-        if (OPTIMIZATION)
-        {
-            return this.bvhtree.raycast(eye, rayDir, d_dot_d)
-        }
-        let tri_hits = []
-        this.triangles.forEach(tri => {
-            tri_hits.push(tri.raycast(eye, rayDir, d_dot_d))
-        })
-
-        let t_ind = indexOfLowestNonNegativeValue(tri_hits)
-        if (t_ind != -1)
-        {
-            return tri_hits[t_ind]
-        }
-        else
-        {
-            return new Hit(-1,this)
-        }
-    }
-}
-
-class AABB extends Primitive
-{
-    constructor(object, eye=[0,0,0])
-    {
-        super(object)
-        this.max = object.max 
-        this.min = object.min  
-        this.flippedX = false
-        this.flippedY = false
-        this.flippedZ = false
-    }
-    raycast(eye, rayDir, d_dot_d)
-    {
-        let a = 1/rayDir.components[0]
-        if (a >= 0){
-            var t_minX = a*(this.min[0] - eye.components[0])
-            var t_maxX = a*(this.max[0] - eye.components[0])
-        }
-        else{
-            var t_minX = a*(this.max[0] - eye.components[0])
-            var t_maxX = a*(this.min[0] - eye.components[0])
-        }
-
-        a = 1/rayDir.components[1]
-        if (a >= 0){
-            var t_minY = a*(this.min[1] - eye.components[1])
-            var t_maxY = a*(this.max[1] - eye.components[1])
-        }
-        else{
-            var t_minY = a*(this.max[1] - eye.components[1])
-            var t_maxY = a*(this.min[1] - eye.components[1])
-        } 
-
-        a = 1/rayDir.components[2]
-        if (a >= 0){
-            var t_minZ = a*(this.min[2] - eye.components[2])
-            var t_maxZ = a*(this.max[2] - eye.components[2])
-        }
-        else{
-            var t_minZ = a*(this.max[2] - eye.components[2])
-            var t_maxZ = a*(this.min[2] - eye.components[2])
-        }
-
-        // if within the bounds of the polygons that make up the box
-        if (t_minX > t_maxY || t_minX > t_maxZ ||
-            t_minY > t_maxX || t_minY > t_maxZ ||
-            t_minZ > t_maxX || t_minZ > t_maxY ||
-            t_maxX < 0 || t_maxY < 0 || t_maxZ < 0)
-        {
-            return new Hit(-1, this)
-        }
-        else
-        {
-            return new Hit(1, this)
-        }
-    }
-    normal(hitPoint)
-    {
-        return new Vector(-1,-1,-1)
-    }
-}
-
 class Triangle extends Primitive
 {
     constructor(object, eye)
@@ -217,7 +16,7 @@ class Triangle extends Primitive
         let A_C = new Vector(this.pointA).subtract(new Vector(this.pointC))
         let B_C = new Vector(this.pointB).subtract(new Vector(this.pointC))
 
-        this.n = A_C.crossProduct(B_C).normalize().negate()
+        this.n = A_C.crossProduct(B_C).normalize()
 
         if (eye.subtract(new Vector(this.pointA)).dotProduct(this.n) < 0)
         {
@@ -276,6 +75,198 @@ class Triangle extends Primitive
     normal(hitPoint)
     {
         return this.n
+    }
+}
+
+class BVHNode extends Primitive
+{
+    constructor(triangles, axis = 0, object={ // use this weird default material properties to solve bad code design
+                                      ambient: [0.9,0.3,0.3],
+                                      diffuse: [0.9,0.3,0.3],
+                                      specular: [0.2,0.2,0.2],
+                                      mirror: [0,0,0],
+                                      phong_exponent: 20,
+                                      type:"bvhnode"})
+    {
+        super(object)
+        this.triangles = triangles
+        this.calculateAABB(object)
+        this.calculateChildren(object, axis)
+    }
+
+    calculateAABB(object)
+    {
+        let min = [Infinity,Infinity,Infinity]
+        let max = [-Infinity,-Infinity,-Infinity]
+        // console.log(this)
+        this.triangles.forEach(tri => {
+            tri.getPointList().forEach(point => {
+                for (let i = 0; i < point.length; i++)
+                {
+                    if (point[i] < min[i])
+                    {
+                        min[i] = point[i]
+                    }
+                    if (point[i] > max[i])
+                    {
+                        max[i] = point[i]
+                    }
+                }
+            })
+        });
+        object.min = min
+        object.max = max
+        this.aabb = new AABB(object)
+    }
+
+    // calculates child nodes
+    calculateChildren(object, axis)
+    {
+        this.children = []
+        let trilen = this.triangles.length
+        if (trilen == 1)
+        {
+            this.children.push(this.triangles[0])
+        }
+        else if (trilen == 2)
+        {
+            this.children.push(this.triangles[0])
+            this.children.push(this.triangles[1])
+        }
+        else
+        {
+            // sort this.triangles along axis
+            this.triangles.sort((tri1, tri2) => {
+                return tri1[axis] - tri2[axis]
+            })
+            this.children.push(new BVHNode(this.triangles.slice(0, trilen/2), axis= (axis+1) % 3))
+            this.children.push(new BVHNode(this.triangles.slice(trilen/2), axis= (axis+1) % 3))
+        }
+    }
+
+    raycast(eye, rayDir, d_dot_d)
+    {
+        if (this.aabb.raycast(eye, rayDir, d_dot_d))
+        {
+            let childHits = []
+            this.children.forEach(child => {
+                childHits.push(child.raycast(eye, rayDir, d_dot_d))
+            })
+
+            let minT = indexOfLowestNonNegativeValue(childHits)
+            if (minT != -1)
+            {
+                return childHits[minT]
+            }
+            return new Hit(-1, this)
+        }
+        else return new Hit(-1, this)
+    }
+}
+
+
+class Mesh extends Primitive
+{
+    constructor(object, eye, obj)
+    {
+        super(object)
+        this.root = new Vector(object.root)
+        this.scale = object.scale
+        this.generateTriangleList(eye, obj)
+        this.bvhtree = new BVHNode(this.triangles)
+    }
+    generateTriangleList(eye, obj)
+    {
+        this.triangles = []
+
+        obj.models[0].faces.forEach(face => {
+            let surface = copyMaterial(this)
+            surface.type = "triangle"
+            surface.pointA = new Vector(obj.models[0].vertices[face.vertices[0].vertexIndex-1]).multiply(this.scale).add(this.root).components
+            surface.pointB = new Vector(obj.models[0].vertices[face.vertices[1].vertexIndex-1]).multiply(this.scale).add(this.root).components
+            surface.pointC = new Vector(obj.models[0].vertices[face.vertices[2].vertexIndex-1]).multiply(this.scale).add(this.root).components
+            this.triangles.push(new Triangle(surface, eye))
+        });
+    }
+    raycast(eye, rayDir, d_dot_d)
+    {
+        if (OPTIMIZATION)
+        {
+            return this.bvhtree.raycast(eye, rayDir, d_dot_d)
+        }
+        let tri_hits = []
+        this.triangles.forEach(tri => {
+            tri_hits.push(tri.raycast(eye, rayDir, d_dot_d))
+        })
+
+        let t_ind = indexOfLowestNonNegativeValue(tri_hits)
+        if (t_ind != -1)
+        {
+            return tri_hits[t_ind]
+        }
+        else
+        {
+            return new Hit(-1,this)
+        }
+    }
+}
+
+class AABB extends Primitive
+{
+    constructor(object, eye=[0,0,0])
+    {
+        super(object)
+        this.max = object.max 
+        this.min = object.min  
+    }
+    raycast(eye, rayDir, d_dot_d)
+    {
+        let a = 1/rayDir.components[0]
+        if (a >= 0){
+            var t_minX = a*(this.min[0] - eye.components[0])
+            var t_maxX = a*(this.max[0] - eye.components[0])
+        }
+        else{
+            var t_minX = a*(this.max[0] - eye.components[0])
+            var t_maxX = a*(this.min[0] - eye.components[0])
+        }
+
+        a = 1/rayDir.components[1]
+        if (a >= 0){
+            var t_minY = a*(this.min[1] - eye.components[1])
+            var t_maxY = a*(this.max[1] - eye.components[1])
+        }
+        else{
+            var t_minY = a*(this.max[1] - eye.components[1])
+            var t_maxY = a*(this.min[1] - eye.components[1])
+        } 
+
+        a = 1/rayDir.components[2]
+        if (a >= 0){
+            var t_minZ = a*(this.min[2] - eye.components[2])
+            var t_maxZ = a*(this.max[2] - eye.components[2])
+        }
+        else{
+            var t_minZ = a*(this.max[2] - eye.components[2])
+            var t_maxZ = a*(this.min[2] - eye.components[2])
+        }
+
+        // if within the bounds of the polygons that make up the box
+        if (t_minX > t_maxY || t_minX > t_maxZ ||
+            t_minY > t_maxX || t_minY > t_maxZ ||
+            t_minZ > t_maxX || t_minZ > t_maxY ||
+            t_maxX < 0 || t_maxY < 0 || t_maxZ < 0)
+        {
+            return false
+        }
+        else
+        {
+            return true
+        }
+    }
+    normal(hitPoint)
+    {
+        return new Vector(-1,-1,-1)
     }
 }
 
