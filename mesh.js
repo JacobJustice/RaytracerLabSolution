@@ -43,6 +43,7 @@ class BVHNode extends Primitive
         });
         object.min = min
         object.max = max
+        object.center = [0,0,0]
         this.aabb = new AABB(object)
     }
 
@@ -149,14 +150,19 @@ class AABB extends Primitive
     constructor(object, eye=[0,0,0])
     {
         super(object)
-        this.max = object.max 
-        this.min = object.min  
+        this.max = object.max
+        this.min = object.min 
+        for (let i = 0; i < 3; i++)
+        {
+            this.max[i] += object.center[i]
+            this.min[i] += object.center[i]
+        }
         this.flippedX = false
         this.flippedY = false
         this.flippedZ = false
     }
-    raycast(eye, rayDir, d_dot_d)
-    {
+
+    raycast(eye, rayDir, d_dot_d) {
         let a = 1/rayDir.components[0]
         if (a >= 0){
             var t_minX = a*(this.min[0] - eye.components[0])
@@ -187,22 +193,69 @@ class AABB extends Primitive
             var t_maxZ = a*(this.min[2] - eye.components[2])
         }
 
-        // if within the bounds of the polygons that make up the box
-        if (t_minX > t_maxY || t_minX > t_maxZ ||
-            t_minY > t_maxX || t_minY > t_maxZ ||
-            t_minZ > t_maxX || t_minZ > t_maxY ||
-            t_maxX < 0 || t_maxY < 0 || t_maxZ < 0)
-        {
-            return new Hit(-1, this)
-        }
-        else
-        {
-            return new Hit(1, this)
+
+        // // if within the bounds of the polygons that make up the box
+        // if (t_minX > t_maxY || t_minX > t_maxZ ||
+        //     t_minY > t_maxX || t_minY > t_maxZ ||
+        //     t_minZ > t_maxX || t_minZ > t_maxY ||
+        //     t_maxX < 0 || t_maxY < 0 || t_maxZ < 0)
+        // {
+        //     return new Hit(-1, this)
+        // }
+        // else
+        // {
+        //     return new Hit(1, this)
+        // }
+
+        const tNear = Math.max(t_minX, t_minY, t_minZ);
+        const tFar = Math.min(t_maxX, t_maxY, t_maxZ);
+
+        // Check if there's an intersection
+        if (tNear > tFar || tFar < 0) {
+            return new Hit(-1, this); // No hit
+        } else {
+            if (tNear > 0)
+            {
+                return new Hit(tNear, this)
+            }
+            else
+            {
+                return new Hit(tFar, this); // Hit detected
+            }
         }
     }
-    normal(hitPoint)
-    {
-        return new Vector(-1,-1,-1)
+    normal(hitPoint) {
+        // return new Vector(1,1,1)
+        // Calculate the distances from the hitPoint to each face of the AABB
+        const xDistMin = Math.abs(hitPoint.components[0] - this.min[0]);
+        const xDistMax = Math.abs(hitPoint.components[0] - this.max[0]);
+
+        const yDistMin = Math.abs(hitPoint.components[1] - this.min[1]);
+        const yDistMax = Math.abs(hitPoint.components[1] - this.max[1]);
+
+        const zDistMin = Math.abs(hitPoint.components[2] - this.min[2]);
+        const zDistMax = Math.abs(hitPoint.components[2] - this.max[2]);
+
+        // Find the minimum distance and corresponding face
+        const minDist = Math.min(xDistMin, xDistMax, yDistMin, yDistMax, zDistMin, zDistMax);
+
+        // Determine which face has the minimum distance
+        if (minDist === xDistMin) {
+            return new Vector(-1, 0, 0); // Normal pointing towards the negative X face
+        } else if (minDist === xDistMax) {
+            return new Vector(1, 0, 0);  // Normal pointing towards the positive X face
+        } else if (minDist === yDistMin) {
+            return new Vector(0, -1, 0); // Normal pointing towards the negative Y face
+        } else if (minDist === yDistMax) {
+            return new Vector(0, 1, 0);  // Normal pointing towards the positive Y face
+        } else if (minDist === zDistMin) {
+            return new Vector(0, 0, -1); // Normal pointing towards the negative Z face
+        } else if (minDist === zDistMax) {
+            return new Vector(0, 0, 1);  // Normal pointing towards the positive Z face
+        }
+
+        // If no faces are found, return a default normal (can also be handled as an error)
+        return new Vector(0, 0, 0); 
     }
 }
 

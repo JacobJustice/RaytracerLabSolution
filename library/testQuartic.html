@@ -1,0 +1,49 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Quartic Solver</title>
+    <script type="module">
+        import { solveQuartic } from './solvers.js';
+
+        function testQuarticSolver() {
+            // Get the values from the input fields
+            const A = parseFloat(document.getElementById('A').value);
+            const B = parseFloat(document.getElementById('B').value);
+            const C = parseFloat(document.getElementById('C').value);
+            const D = parseFloat(document.getElementById('D').value);
+            const E = parseFloat(document.getElementById('E').value);
+
+            // Solve the quartic equation
+            const roots = solveQuartic(A, B, C, D, E);
+
+            // Display the roots in the console
+            console.log('Roots:', roots);
+            alert('Roots: ' + roots.join(', ')); // Display roots as an alert
+        }
+        
+        window.testQuarticSolver = testQuarticSolver;
+        document.getElementById("test").onclick = testQuarticSolver;
+    </script>
+</head>
+<body>
+    <h1>Test Quartic Solver</h1>
+    
+    <label for="A">A (x<sup>4</sup>):</label>
+    <input type="number" id="A" step="any" value="1"><br><br>
+    
+    <label for="B">B (x<sup>3</sup>):</label>
+    <input type="number" id="B" step="any" value="0"><br><br>
+    
+    <label for="C">C (x<sup>2</sup>):</label>
+    <input type="number" id="C" step="any" value="0"><br><br>
+    
+    <label for="D">D (x):</label>
+    <input type="number" id="D" step="any" value="0"><br><br>
+    
+    <label for="E">E (constant):</label>
+    <input type="number" id="E" step="any" value="-1"><br><br>
+    
+    <button id="test">Solve Quartic</button>
+</body>
+</html>
