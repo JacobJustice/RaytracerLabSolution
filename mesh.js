@@ -5,6 +5,79 @@ import { Vector } from './library/vector.js'
 
 var OPTIMIZATION = true
 
+class Triangle extends Primitive
+{
+    constructor(object, eye)
+    {
+        super(object)
+        this.pointA = object.pointA
+        this.pointB = object.pointB
+        this.pointC = object.pointC
+        let A_C = new Vector(this.pointA).subtract(new Vector(this.pointC))
+        let B_C = new Vector(this.pointB).subtract(new Vector(this.pointC))
+
+        this.n = A_C.crossProduct(B_C).normalize()
+
+        if (eye.subtract(new Vector(this.pointA)).dotProduct(this.n) < 0)
+        {
+            this.n = this.n.negate()
+        }
+    }
+
+    getPointList()
+    {
+        return [this.pointA, this.pointB, this.pointC]
+    }
+    
+    // implemented using Cramer's Rule, there are other ways but this is the fastest supposedly
+    raycast(eye, rayDir, d_dot_d, t_min = Infinity, t_max = Infinity)
+    {
+        let a = this.pointA[0] - this.pointB[0]
+        let b = this.pointA[1] - this.pointB[1]
+        let c = this.pointA[2] - this.pointB[2]
+        let d = this.pointA[0] - this.pointC[0]
+        let e = this.pointA[1] - this.pointC[1]
+        let f = this.pointA[2] - this.pointC[2]
+        let g = rayDir.components[0]
+        let h = rayDir.components[1]
+        let i = rayDir.components[2]
+        let j = this.pointA[0] - eye.components[0]
+        let k = this.pointA[1] - eye.components[1]
+        let l = this.pointA[2] - eye.components[2]
+
+        let ei_minus_hf = e*i - h*f
+        let jc_minus_al = j*c - a*l
+        let bl_minus_kc = b*l - k*c
+        let dh_minus_eg = d*h - e*g
+        let gf_minus_di = g*f - d*i
+        let ak_minus_jb = a*k - j*b
+
+        let M = a*ei_minus_hf + b*gf_minus_di + c*dh_minus_eg
+        let t = -(f*ak_minus_jb+ e*jc_minus_al + d*bl_minus_kc)/M
+        if (t < EPSILON || t > t_max)
+        {
+            return new Hit(-1, this)
+        }
+        let gamma = (i*ak_minus_jb + h*jc_minus_al + g*bl_minus_kc)/M
+        if (gamma < 0 || gamma > 1)
+        {
+            return new Hit(-1,this)
+        }
+        let beta = (j*ei_minus_hf + k*gf_minus_di + l*dh_minus_eg)/M
+        if (beta < 0 || beta > 1 - gamma)
+        {
+            return new Hit(-1, this)
+        }
+        
+        return new Hit(t, this)
+    }
+
+    normal(hitPoint)
+    {
+        return this.n
+    }
+}
+
 class BVHNode extends Primitive
 {
     constructor(triangles, axis = 0, object={ // use this weird default material properties to solve bad code design
@@ -51,7 +124,6 @@ class BVHNode extends Primitive
     calculateChildren(object, axis)
     {
         this.children = []
-        //decide which axis to split on
         let trilen = this.triangles.length
         if (trilen == 1)
         {
@@ -75,22 +147,19 @@ class BVHNode extends Primitive
 
     raycast(eye, rayDir, d_dot_d)
     {
-        if (this.aabb.raycast(eye, rayDir, d_dot_d).hit)
+        if (this.aabb.raycast(eye, rayDir, d_dot_d))
         {
-            // 
             let childHits = []
             this.children.forEach(child => {
-                // console.log('child', child)
                 childHits.push(child.raycast(eye, rayDir, d_dot_d))
             })
-            // console.log(childHits)
+
             let minT = indexOfLowestNonNegativeValue(childHits)
             if (minT != -1)
             {
                 return childHits[minT]
             }
             return new Hit(-1, this)
-        
         }
         else return new Hit(-1, this)
     }
@@ -114,13 +183,11 @@ class Mesh extends Primitive
         obj.models[0].faces.forEach(face => {
             let surface = copyMaterial(this)
             surface.type = "triangle"
-            // console.log(obj.models[0].vertices,face)
             surface.pointA = new Vector(obj.models[0].vertices[face.vertices[0].vertexIndex-1]).multiply(this.scale).add(this.root).components
             surface.pointB = new Vector(obj.models[0].vertices[face.vertices[1].vertexIndex-1]).multiply(this.scale).add(this.root).components
             surface.pointC = new Vector(obj.models[0].vertices[face.vertices[2].vertexIndex-1]).multiply(this.scale).add(this.root).components
             this.triangles.push(new Triangle(surface, eye))
         });
-        // console.log(this.tris)
     }
     raycast(eye, rayDir, d_dot_d)
     {
@@ -160,6 +227,8 @@ class AABB extends Primitive
         this.flippedX = false
         this.flippedY = false
         this.flippedZ = false
+        this.max = object.max 
+        this.min = object.min  
     }
 
     raycast(eye, rayDir, d_dot_d) {
