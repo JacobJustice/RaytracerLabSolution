@@ -32,7 +32,8 @@
   "lights": [
     {
       "position": [3,3,5],
-      "color": [0.8,0.8,0.8]
+      "color": [0.8,0.8,0.8],
+      "intensity": 100
     }
   ]
 }

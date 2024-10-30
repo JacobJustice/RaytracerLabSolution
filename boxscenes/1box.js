@@ -1,8 +1,8 @@
 {
   "eye": [2.5,2.2,5],
-  "lookat": [0,0,0],
+  "lookat": [0,1,0],
   "up": [0,1,0],
-  "fov_angle": 80,
+  "fov_angle": 60,
   "width": 400,
   "height": 400,
   "surfaces": [
@@ -10,7 +10,7 @@
       "type": "aabb",
       "center": [0.5,0,-1],
       "min": [-1,0,-1],
-      "max": [1,2,1],
+      "max": [1,2,2],
       "ambient": [0.9,0.3,0.3],
       "diffuse": [0.9,0.3,0.3],
       "specular": [0.5,0.5,0.5],
@@ -30,8 +30,9 @@
   ],
   "lights": [
     {
-      "position": [5,2.5,2.5],
-      "color": [0.8,0.8,0.8]
+      "position": [25,12,10],
+      "color": [0.8,0.8,0.8],
+      "intensity": 1200
     }
   ]
 }

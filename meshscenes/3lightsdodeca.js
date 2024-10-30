@@ -31,16 +31,19 @@
   ],
   "lights": [
     {
-      "position": [25,-85,33],
-      "color": [1.0,0,0]
+      "position": [25,-35,70],
+      "color": [1.0,0,0],
+      "intensity": 5000
     },
     {
-      "position": [5,-85,33],
-      "color": [0,0,1.0]
+      "position": [5,-35,70],
+      "color": [0,0,1.0],
+      "intensity": 5000
     },
     {
-      "position": [-15,-85,33],
-      "color": [0,1.0,0]
+      "position": [-25,-35,70],
+      "color": [0,1.0,0],
+      "intensity": 5000
     }
 ]
 }

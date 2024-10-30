@@ -38,16 +38,6 @@
     },
     {
       "type": "plane",
-      "point": [0,15,0],
-      "normal": [0,-1,0],
-      "ambient": [0.025,0.025,0.025],
-      "diffuse": [0.5,0.5,0.5],
-      "specular": [0.0,0.0,0.0],
-      "mirror": [0.0,0.0,0.0],
-      "phong_exponent": 0
-    },
-    {
-      "type": "plane",
       "point": [0,0,-20],
       "normal": [0,0,1],
       "ambient": [0.025,0.025,0.025],
@@ -79,16 +69,19 @@
   ],
   "lights": [
     {
-      "position": [-3,14,-7],
-      "color": [0.8,0.2,0.2]
+      "position": [-3,10,-7],
+      "color": [0.8,0.2,0.2],
+      "intensity":200
     },
     {
-      "position": [0,14,-7],
-      "color": [0.2,0.2,0.8]
+      "position": [0,10,-7],
+      "color": [0.2,0.2,0.8],
+      "intensity":200
     },
     {
-      "position": [3,14,-7],
-      "color": [0.2,0.8,0.2]
+      "position": [3,10,-7],
+      "color": [0.2,0.8,0.2],
+      "intensity":200
     }
   ]
 }

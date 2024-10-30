@@ -20,7 +20,8 @@ Meshes are implemented using a bounding volume hierarchy as a means of optimizat
 
 */
 
-var AMBIENT_LIGHT=.2
+var AMBIENT_LIGHT=0.05
+var laser = false
 
 // -------- DO NOT EDIT  --------
 // on button click, load the scene file and raytrace that scene
@@ -37,6 +38,7 @@ document.getElementById('submit').onclick = async function() {
 };
 // -------- DO NOT EDIT ABOVE --------
 
+
 function raytrace(scene){
     var [imageData, ctx] = imageDataFromCanvas(document.getElementById('canvas'), scene)
     console.log(scene)
@@ -47,7 +49,6 @@ function raytrace(scene){
     var eye = new Vector(scene.eye) // location of the eye
     var up = new Vector(scene.up) // up vector
     var lookat = new Vector(scene.lookat) // point the eye is looking at
-    
     var forwardDir = lookat.subtract(eye)
     var lookAtDist = forwardDir.length()// save for later use
     var forward = forwardDir.normalize() //-w
@@ -89,7 +90,7 @@ function raytrace(scene){
     // loop over every pixel
     for(let i = 0; i < imageData.data.length; i += 4) {
         // compute viewing ray
-        var laser = false
+        laser = false
         var pixel_i = (i/4)%scene.width
         var pixel_j = Math.floor((i/4)/scene.width)
         var uScale = l + (r - l)*(pixel_i + .5)/scene.width
@@ -101,16 +102,17 @@ function raytrace(scene){
             console.log("progress:", i/4, '/', imageData.data.length/4, "pixels")
         }
 
+        // if (pixel_i == 200 && pixel_j == 149)
+        // {
+        //     laser = true
+        // }
+
         let surface_hits = raycastIntoScene(eye, rayDir, surfaces)
         // set pixel color to value computed from hit point, light and n
         var t_ind = indexOfLowestNonNegativeValue(surface_hits)
         // console.log(t_ind)
-        if (laser)
-        {
-            imageData.data[i+1] = 255
-            imageData.data[i+3] = 255
-        }
-        else if (t_ind != -1)
+
+        if (t_ind != -1)
         {
             let hitPoint = eye.add(rayDir.scaleBy(surface_hits[t_ind].t))
             let color = colorPixel(hitPoint, lights, surfaces, eye, rayDir, surface_hits[t_ind], 0)
@@ -125,6 +127,14 @@ function raytrace(scene){
             imageData.data[i + 1] = 0;   // green
             imageData.data[i + 2] = 0;   // blue
             imageData.data[i + 3] = 255; // alpha
+        }
+        
+        if (laser)
+        {
+            imageData.data[i] = 0
+            imageData.data[i+1] = 255
+            imageData.data[i+2] = 0
+            imageData.data[i+3] = 255
         }
         // break
     }
@@ -156,7 +166,7 @@ function ambient(surface)
         surface.ambient[2]*AMBIENT_LIGHT])
 }
 
-function lambertian(hit, light, lDir, nDir)
+function lambertian_old(hit, light, lDir, nDir)
 {
     let n_dot_l = nDir.dotProduct(lDir)
     return {components:[light.color[0]*hit.surface.diffuse[0]*Math.max(0, n_dot_l),
@@ -164,11 +174,24 @@ function lambertian(hit, light, lDir, nDir)
                         light.color[2]*hit.surface.diffuse[2]*Math.max(0, n_dot_l)]}
 }
 
+function lambertian(hit, light)
+{
+    // console.log(hitPoint, light.position, distance)
+    return  {components:[light.color[0]*hit.surface.diffuse[0],
+                         light.color[1]*hit.surface.diffuse[1],
+                         light.color[2]*hit.surface.diffuse[2]]};
+}
+
 function shadow(hitPoint, lDir, l_dist, surfaces)
 {
     // check if a there is any object between the hitpoint and the current light
     for (let i = 0; i < surfaces.length; i++){
-        let surfhit = surfaces[i].raycast(hitPoint, lDir, lDir.dotProduct(lDir))
+        let surfhit = surfaces[i].raycast(hitPoint.add(lDir.scaleBy(0.000001)), lDir, lDir.dotProduct(lDir))
+        if (laser)
+        {
+            console.log(surfhit, hitPoint, lDir, lDir.dotProduct(lDir))
+        }
+
         if ((surfhit.t > EPSILON) && (l_dist > surfhit.t)) {
             return true
         }
@@ -187,9 +210,6 @@ function mirror(hit, rayDir, hitPoint, surfaces, lights, iter) {
         let reflectHit = reflectHits[ind]
         let reflectHitPoint = hitPoint.add(reflectDir.scaleBy(reflectHit.t))
         let reflectColor = colorPixel(reflectHitPoint, lights, surfaces, hitPoint, reflectDir, reflectHit, iter+1)
-        // return {components:[(reflectColor[0]*hit.surface.mirror[0]),
-                            // (reflectColor[1]*hit.surface.mirror[1]),
-                            // (reflectColor[2]*hit.surface.mirror[2])]}
         // console.log("reflectColor", reflectColor)
         return [(reflectColor[0]*hit.surface.mirror[0]),
                 (reflectColor[1]*hit.surface.mirror[1]),
@@ -203,16 +223,18 @@ function specular(eye, hitPoint, lDir, nDir, hit, light){
     let v_add_l = v_vec.add(lDir)
     let h_vec = v_add_l.scaleBy(1/v_add_l.length()).normalize()
     let n_dot_h = nDir.dotProduct(h_vec)
-    return {components:[(light.color[0]*hit.surface.specular[0]*(Math.max(0, n_dot_h))**hit.surface.phong_exponent),
-                        (light.color[1]*hit.surface.specular[1]*(Math.max(0, n_dot_h))**hit.surface.phong_exponent),
-                        (light.color[2]*hit.surface.specular[2]*(Math.max(0, n_dot_h))**hit.surface.phong_exponent)]}
+    return {components:[
+        (hit.surface.specular[0]*(Math.max(0, n_dot_h)**hit.surface.phong_exponent)),
+        (hit.surface.specular[1]*(Math.max(0, n_dot_h)**hit.surface.phong_exponent)),
+        (hit.surface.specular[2]*(Math.max(0, n_dot_h)**hit.surface.phong_exponent))
+    ]}
 
 }
 
 function colorPixel(hitPoint, lights, surfaces, eye, rayDir, hit, iter)
 {
     // Ambient Shading
-    let outColor = ambient(hit.surface)
+    let outColor = new Vector(0,0,0)
 
     lights.forEach((light) => {
         let lDir = light.position.subtract(hitPoint)
@@ -220,15 +242,22 @@ function colorPixel(hitPoint, lights, surfaces, eye, rayDir, hit, iter)
         lDir = lDir.normalize()
         let inShadow = shadow(hitPoint, lDir, l_dist, surfaces)
         let nDir = hit.surface.normal(hitPoint)
-        let lambertianColor = lambertian(hit, light, nDir, lDir)
-        let specularColor = specular(eye, hitPoint, lDir, nDir, hit, light)
+        let distance = hitPoint.subtract(light.position).length();
+        let n_dot_l = nDir.dotProduct(lDir)
+
         if (!inShadow)
         {
+            let irradiance = light.irradiance(distance, n_dot_l)
+
             // Lambertian Shading (diffuse)
-            outColor = outColor.add(lambertianColor)
+            let lambertianColor = lambertian(hit, light)
+            outColor = outColor.add(lambertianColor).scaleBy(irradiance)
         
             // Specular Reflections/
-            outColor = outColor.add(specularColor)
+            let specularColor = specular(eye, hitPoint, lDir, nDir, hit, light, irradiance)
+            outColor = outColor.add(specularColor).scaleBy(irradiance)
+            // console.log(outColor, lambertianColor, specularColor)
+
         }
 
         // Ideal Specular Reflection
@@ -242,11 +271,11 @@ function colorPixel(hitPoint, lights, surfaces, eye, rayDir, hit, iter)
                 // console.log(outColor)
             }
         }
-        // console.log(outColor, lambertianColor, specularColor)
 
     })
 
     // outColor = hit.surface.normal(hitPoint).scaleBy(255)
-    return outColor.components
+    outColor = outColor.add(ambient(hit.surface))
+    // return outColor.components
     return new Vector(hit.surface.diffuse).components
 }

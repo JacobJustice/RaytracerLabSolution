@@ -99,8 +99,14 @@ class Light
 {
     constructor(object)
     {
-        this.position = new Vector(object.position)
-        this.color = object.color
+        this.position = new Vector(object.position);
+        this.color = object.color;
+        this.intensity = object.intensity;
+    }
+    
+    irradiance(distance, n_dot_l)
+    {
+        return (this.intensity * n_dot_l) / (distance ** 2);
     }
 }
 
