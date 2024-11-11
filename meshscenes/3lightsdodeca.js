@@ -22,28 +22,29 @@
       "point": [0,0,-15],
       "normal": [0,0,1],
       "ambient": [0.5,0.5,0.5],
-      "diffuse": [0.5,0.5,0.5],
+      "diffuse": [1.0,1.0,1.0],
       "specular": [0.2,0.2,0.2],
-      "mirror": [0.1,0.1,0.1],
+      "mirror": [0.3,0.3,0.3],
       "phong_exponent": 20
     }
 
   ],
   "lights": [
-    {
-      "position": [25,-35,70],
-      "color": [1.0,0,0],
-      "intensity": 5000
-    },
-    {
-      "position": [5,-35,70],
+        {
+      "position": [50,-705,300],
       "color": [0,0,1.0],
-      "intensity": 5000
+      "intensity": 900000
     },
     {
-      "position": [-25,-35,70],
+      "position": [-250,-705,300],
       "color": [0,1.0,0],
-      "intensity": 5000
+      "intensity": 900000
+    },
+    {
+      "position": [250,-705,300],
+      "color": [1.0,0,0],
+      "intensity": 900000
     }
+
 ]
 }

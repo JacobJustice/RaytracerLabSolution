@@ -3,8 +3,8 @@
   "lookat": [-0.45,-2,0],
   "up": [0,1,0],
   "fov_angle": 50,
-  "width" : 800,
-  "height": 800,
+  "width" : 400,
+  "height": 400,
   "surfaces": [
     {
       "type": "mesh",
@@ -25,15 +25,15 @@
       "ambient": [0.5,0.5,0.5],
       "diffuse": [0.5,0.5,0.5],
       "specular": [0.2,0.2,0.2],
-      "mirror": [0.1,0.1,0.1],
+      "mirror": [0.0,0.0,0.0],
       "phong_exponent": 20
     }
   ],
   "lights": [
     {
-      "position": [3,3,5],
+      "position": [30,30,50],
       "color": [0.8,0.8,0.8],
-      "intensity": 100
+      "intensity": 5000
     }
   ]
 }

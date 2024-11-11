@@ -98,7 +98,6 @@ class BVHNode extends Primitive
     {
         let min = [Infinity,Infinity,Infinity]
         let max = [-Infinity,-Infinity,-Infinity]
-        // console.log(this)
         this.triangles.forEach(tri => {
             tri.getPointList().forEach(point => {
                 for (let i = 0; i < point.length; i++)
@@ -125,14 +124,8 @@ class BVHNode extends Primitive
     {
         this.children = []
         let trilen = this.triangles.length
-        if (trilen == 1)
-        {
-            this.children.push(this.triangles[0])
-        }
-        else if (trilen == 2)
-        {
-            this.children.push(this.triangles[0])
-            this.children.push(this.triangles[1])
+        if (trilen <= 2) {
+            this.children.push(...this.triangles);
         }
         else
         {
@@ -232,67 +225,28 @@ class AABB extends Primitive
     }
 
     raycast(eye, rayDir, d_dot_d) {
-        let a = 1/rayDir.components[0]
-        if (a >= 0){
-            var t_minX = a*(this.min[0] - eye.components[0])
-            var t_maxX = a*(this.max[0] - eye.components[0])
-        }
-        else{
-            var t_minX = a*(this.max[0] - eye.components[0])
-            var t_maxX = a*(this.min[0] - eye.components[0])
-        }
+        const invDirX = 1 / rayDir.components[0];
+        const invDirY = 1 / rayDir.components[1];
+        const invDirZ = 1 / rayDir.components[2];
 
-        a = 1/rayDir.components[1]
-        if (a >= 0){
-            var t_minY = a*(this.min[1] - eye.components[1])
-            var t_maxY = a*(this.max[1] - eye.components[1])
-        }
-        else{
-            var t_minY = a*(this.max[1] - eye.components[1])
-            var t_maxY = a*(this.min[1] - eye.components[1])
-        } 
+        const tMinX = invDirX * (this.min[0] - eye.components[0]);
+        const tMaxX = invDirX * (this.max[0] - eye.components[0]);
 
-        a = 1/rayDir.components[2]
-        if (a >= 0){
-            var t_minZ = a*(this.min[2] - eye.components[2])
-            var t_maxZ = a*(this.max[2] - eye.components[2])
-        }
-        else{
-            var t_minZ = a*(this.max[2] - eye.components[2])
-            var t_maxZ = a*(this.min[2] - eye.components[2])
-        }
+        const tMinY = invDirY * (this.min[1] - eye.components[1]);
+        const tMaxY = invDirY * (this.max[1] - eye.components[1]);
 
+        const tMinZ = invDirZ * (this.min[2] - eye.components[2]);
+        const tMaxZ = invDirZ * (this.max[2] - eye.components[2]);
 
-        // // if within the bounds of the polygons that make up the box
-        // if (t_minX > t_maxY || t_minX > t_maxZ ||
-        //     t_minY > t_maxX || t_minY > t_maxZ ||
-        //     t_minZ > t_maxX || t_minZ > t_maxY ||
-        //     t_maxX < 0 || t_maxY < 0 || t_maxZ < 0)
-        // {
-        //     return new Hit(-1, this)
-        // }
-        // else
-        // {
-        //     return new Hit(1, this)
-        // }
+        const tNear = Math.max(tMinX, tMinY, tMinZ);
+        const tFar = Math.min(tMaxX, tMaxY, tMaxZ);
 
-        const tNear = Math.max(t_minX, t_minY, t_minZ);
-        const tFar = Math.min(t_maxX, t_maxY, t_maxZ);
-
-        // Check if there's an intersection
         if (tNear > tFar || tFar < 0) {
             return new Hit(-1, this); // No hit
-        } else {
-            if (tNear > 0)
-            {
-                return new Hit(tNear, this)
-            }
-            else
-            {
-                return new Hit(tFar, this); // Hit detected
-            }
         }
+        return new Hit(tNear > 0 ? tNear : tFar, this); // Hit detected
     }
+
     normal(hitPoint) {
         // return new Vector(1,1,1)
         // Calculate the distances from the hitPoint to each face of the AABB

@@ -3,8 +3,8 @@
   "lookat": [5,10,0],
   "up": [0,1,0],
   "fov_angle": 50,
-  "width" : 1200,
-  "height": 1200,
+  "width" : 400,
+  "height": 300,
   "surfaces": [
     {
       "type": "mesh",
