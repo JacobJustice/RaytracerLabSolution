@@ -4,19 +4,22 @@ import { indexOfLowestNonNegativeValue } from './helper.js'
 import { Vector } from './library/vector.js'
 
 var OPTIMIZATION = true
-
-class BVHNode extends Primitive
-{
-    constructor(triangles, axis = 0, object={ // use this weird default material properties to solve bad code design
+var default_material = { // use this weird default material properties to solve bad code design
                                       ambient: [0.9,0.3,0.3],
                                       diffuse: [0.9,0.3,0.3],
                                       specular: [0.2,0.2,0.2],
                                       mirror: [0,0,0],
                                       phong_exponent: 20,
-                                      type:"bvhnode"})
+                                      type:"bvhnode"}
+
+class BVHNode extends Primitive
+{
+    constructor(triangles, axis = 0, object=default_material, root=null)
     {
         super(object)
         this.triangles = triangles
+        this.root = root
+
         this.calculateAABB(object)
         this.calculateChildren(object, axis)
     }
@@ -43,6 +46,7 @@ class BVHNode extends Primitive
         });
         object.min = min
         object.max = max
+        object.center = [0,0,0]
         this.aabb = new AABB(object)
     }
 
@@ -67,25 +71,24 @@ class BVHNode extends Primitive
             this.triangles.sort((tri1, tri2) => {
                 return tri1[axis] - tri2[axis]
             })
-            this.children.push(new BVHNode(this.triangles.slice(0, trilen/2), axis= (axis+1) % 3))
-            this.children.push(new BVHNode(this.triangles.slice(trilen/2), axis= (axis+1) % 3))
+            this.children.push(new BVHNode(this.triangles.slice(0, trilen/2), axis= (axis+1) % 3, {}, this.root))
+            this.children.push(new BVHNode(this.triangles.slice(trilen/2), axis= (axis+1) % 3, {}, this.root))
         }
     }
 
-    raycast(eye, rayDir, d_dot_d)
+    raycast(eye, rayDir, d_dot_d, depth=0)
     {
         if (this.aabb.raycast(eye, rayDir, d_dot_d).hit)
         {
             // 
             let childHits = []
             this.children.forEach(child => {
-                // console.log('child', child)
-                childHits.push(child.raycast(eye, rayDir, d_dot_d))
+                childHits.push(child.raycast(eye, rayDir, d_dot_d, depth+1))
             })
-            // console.log(childHits)
             let minT = indexOfLowestNonNegativeValue(childHits)
             if (minT != -1)
             {
+                this.root.depthList.push(depth)
                 return childHits[minT]
             }
             return new Hit(-1, this)
@@ -104,7 +107,8 @@ class Mesh extends Primitive
         this.root = new Vector(object.root)
         this.scale = object.scale
         this.generateTriangleList(eye, obj)
-        this.bvhtree = new BVHNode(this.triangles)
+        this.bvhtree = new BVHNode(this.triangles, 0, {}, this)
+        this.depthList = []
     }
     generateTriangleList(eye, obj)
     {
@@ -125,7 +129,10 @@ class Mesh extends Primitive
     {
         if (OPTIMIZATION)
         {
-            return this.bvhtree.raycast(eye, rayDir, d_dot_d)
+            let result = this.bvhtree.raycast(eye, rayDir, d_dot_d, 0)
+            // console.log(result)
+            // this.depthList.push(result.depth)
+            return result
         }
         let tri_hits = []
         this.triangles.forEach(tri => {
@@ -151,12 +158,30 @@ class AABB extends Primitive
         super(object)
         this.max = object.max 
         this.min = object.min  
-        this.flippedX = false
-        this.flippedY = false
-        this.flippedZ = false
+        for (let i = 0; i < 3; i++)
+        {
+            this.max[i] += object.center[i]
+            this.min[i] += object.center[i]
+        }
     }
     raycast(eye, rayDir, d_dot_d)
     {
+        // let invDirX = 1 / rayDir.components[0];
+        // let invDirY = 1 / rayDir.components[1];
+        // let invDirZ = 1 / rayDir.components[2];
+
+        // let tMinX = invDirX * (this.min[0] - eye.components[0]);
+        // let tMaxX = invDirX * (this.max[0] - eye.components[0]);
+
+        // let tMinY = invDirY * (this.min[1] - eye.components[1]);
+        // let tMaxY = invDirY * (this.max[1] - eye.components[1]);
+
+        // let tMinZ = invDirZ * (this.min[2] - eye.components[2]);
+        // let tMaxZ = invDirZ * (this.max[2] - eye.components[2]);
+
+
+
+
         let a = 1/rayDir.components[0]
         if (a >= 0){
             var t_minX = a*(this.min[0] - eye.components[0])
@@ -186,6 +211,13 @@ class AABB extends Primitive
             var t_minZ = a*(this.max[2] - eye.components[2])
             var t_maxZ = a*(this.min[2] - eye.components[2])
         }
+        let tNear = Math.max(t_minX, t_minY, t_minZ);
+        let tFar = Math.min(t_maxX, t_maxY, t_maxZ);
+
+        if (tNear > tFar || tFar < 0) {
+            return new Hit(-1, this); // No hit
+        }
+        return new Hit(tNear > 0 ? tNear : tFar, this); // Hit detected
 
         // if within the bounds of the polygons that make up the box
         if (t_minX > t_maxY || t_minX > t_maxZ ||
@@ -202,8 +234,37 @@ class AABB extends Primitive
     }
     normal(hitPoint)
     {
-        return new Vector(-1,-1,-1)
-    }
+        // return new Vector(1,1,1)
+        // Calculate the distances from the hitPoint to each face of the AABB
+        const xDistMin = Math.abs(hitPoint.components[0] - this.min[0]);
+        const xDistMax = Math.abs(hitPoint.components[0] - this.max[0]);
+
+        const yDistMin = Math.abs(hitPoint.components[1] - this.min[1]);
+        const yDistMax = Math.abs(hitPoint.components[1] - this.max[1]);
+
+        const zDistMin = Math.abs(hitPoint.components[2] - this.min[2]);
+        const zDistMax = Math.abs(hitPoint.components[2] - this.max[2]);
+
+        // Find the minimum distance and corresponding face
+        const minDist = Math.min(xDistMin, xDistMax, yDistMin, yDistMax, zDistMin, zDistMax);
+
+        // Determine which face has the minimum distance
+        if (minDist === xDistMin) {
+            return new Vector(-1, 0, 0); // Normal pointing towards the negative X face
+        } else if (minDist === xDistMax) {
+            return new Vector(1, 0, 0);  // Normal pointing towards the positive X face
+        } else if (minDist === yDistMin) {
+            return new Vector(0, -1, 0); // Normal pointing towards the negative Y face
+        } else if (minDist === yDistMax) {
+            return new Vector(0, 1, 0);  // Normal pointing towards the positive Y face
+        } else if (minDist === zDistMin) {
+            return new Vector(0, 0, -1); // Normal pointing towards the negative Z face
+        } else if (minDist === zDistMax) {
+            return new Vector(0, 0, 1);  // Normal pointing towards the positive Z face
+        }
+
+        // If no faces are found, return a default normal (can also be handled as an error)
+        return new Vector(0, 0, 0);     }
 }
 
 class Triangle extends Primitive

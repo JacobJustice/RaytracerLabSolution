@@ -1,15 +1,15 @@
 {
-  "eye": [-0.8,-1.65,3],
+  "eye": [-0.8,-0.65,3],
   "lookat": [-0.45,-2,0],
   "up": [0,1,0],
-  "fov_angle": 90,
+  "fov_angle": 80,
   "width" : 500,
-  "height": 300,
+  "height": 400,
   "surfaces": [
     {
       "type": "mesh",
       "root": [-1.2,-3.1,0],
-      "scale": [10,10,10],
+      "scale": [1,1,1],
       "obj": "bunny",
       "ambient": [0.9,0.9,0.9],
       "diffuse": [0.9,0.9,0.9],
@@ -20,7 +20,7 @@
     {
       "type": "mesh",
       "root": [1,-3.21,1],
-      "scale": [14,14,14],
+      "scale": [4,4,4],
       "obj": "bunny",
       "ambient": [0.9,0.4,0.7],
       "diffuse": [0.9,0.4,0.7],
