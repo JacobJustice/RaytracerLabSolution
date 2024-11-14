@@ -11,9 +11,9 @@
       "center": [0.5,0,-1],
       "min": [-1,0,-1],
       "max": [1,2,2],
-      "ambient": [0.9,0.3,0.3],
+      "ambient": [0.0,0.0,0.0],
       "diffuse": [0.9,0.3,0.3],
-      "specular": [0.5,0.5,0.5],
+      "specular": [0.9,0.3,0.3],
       "mirror": [0,0,0],
       "phong_exponent": 20
     },
@@ -24,7 +24,7 @@
       "ambient": [0.125,0.125,0.125],
       "diffuse": [0.5,0.5,0.5],
       "specular": [0.1,0.1,0.1],
-      "mirror": [1,1,1],
+      "mirror": [0.2,0.2,0.2],
       "phong_exponent": 0
     }
   ],
@@ -32,7 +32,7 @@
     {
       "position": [25,12,10],
       "color": [0.8,0.8,0.8],
-      "intensity": 1200
+      "intensity": 1100
     }
   ]
 }

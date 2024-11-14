@@ -200,12 +200,12 @@ function mirror(hit, rayDir, hitPoint, surfaces, lights, iter) {
         let reflectHit = reflectHits[ind]
         let reflectHitPoint = hitPoint.add(reflectDir.scaleBy(reflectHit.t))
         let reflectColor = colorPixel(reflectHitPoint, lights, surfaces, hitPoint, reflectDir, reflectHit, iter+1)
-        return [(reflectColor[0]*hit.surface.mirror[0]),
-                (reflectColor[1]*hit.surface.mirror[1]),
-                (reflectColor[2]*hit.surface.mirror[2])]
-        // return {components:[(reflectColor[0]*hit.surface.mirror[0]),
-        //                     (reflectColor[1]*hit.surface.mirror[1]),
-        //                     (reflectColor[2]*hit.surface.mirror[2])]}
+        // return [(reflectColor[0]*hit.surface.mirror[0]),
+        //         (reflectColor[1]*hit.surface.mirror[1]),
+        //         (reflectColor[2]*hit.surface.mirror[2])]
+        return {components:[(reflectColor[0]*hit.surface.mirror[0]),
+                            (reflectColor[1]*hit.surface.mirror[1]),
+                            (reflectColor[2]*hit.surface.mirror[2])]}
     }
     return null
 }
@@ -226,7 +226,6 @@ function colorPixel(hitPoint, lights, surfaces, eye, rayDir, hit, iter)
 {
     // Ambient Shading
     let outColor = new Vector(0,0,0)
-    outColor = outColor.add(ambient(hit.surface))
     // console.log(outColor)
     let nDir = hit.surface.normal(hitPoint)
 
@@ -241,19 +240,18 @@ function colorPixel(hitPoint, lights, surfaces, eye, rayDir, hit, iter)
         let irradiance = light.irradiance(l_dist, n_dot_l)
 
         let lightColor = new Vector(0, 0, 0);
-
         if (!inShadow)
         {
             // console.log(irradiance);
 
             // Lambertian Shading (diffuse)
             let lambertianColor = lambertian(hit, light)
-            lightColor = lightColor.add(lambertianColor).scaleBy(irradiance)
+            lightColor = lightColor.add(lambertianColor)
             // console.log("lambertianColor" , lambertianColor);
         
             // Specular Reflections/
             let specularColor = specular(eye, hitPoint, lDir, nDir, hit, light)
-            lightColor = lightColor.add(specularColor).scaleBy(irradiance)
+            lightColor = lightColor.add(specularColor)
             // console.log("specularColor", specularColor)
         }
 
@@ -263,16 +261,17 @@ function colorPixel(hitPoint, lights, surfaces, eye, rayDir, hit, iter)
             let mirrorColor = mirror(hit, rayDir, hitPoint, surfaces, lights, iter)
             if (mirrorColor != null)
             {
-                lightColor = lightColor.add(lightColor.multiply(mirrorColor))
+                lightColor = lightColor.add(mirrorColor)
             }
         }
+        lightColor = lightColor.scaleBy(irradiance);
         outColor = outColor.add(lightColor);
-        // console.log("outColor", outColor)
+
 
     })
 
     // let outColor = hit.surface.normal(hitPoint).scaleBy(255)
-
+    outColor = outColor.add(ambient(hit.surface))
     return outColor.components
     return new Vector(hit.surface.diffuse).scaleBy(255).components
 }

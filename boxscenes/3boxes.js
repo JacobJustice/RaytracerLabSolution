@@ -3,8 +3,8 @@
   "lookat": [-1,1,-10],
   "up": [0,1,0],
   "fov_angle": 60,
-  "width": 480,
-  "height": 270,
+  "width": 700,
+  "height": 400,
   "surfaces": [
     {
       "type": "aabb",
