@@ -53,8 +53,8 @@ class BVHNode extends Primitive
     // calculates child nodes
     calculateChildren(object, axis)
     {
+        axis = 0
         this.children = []
-        //decide which axis to split on
         let trilen = this.triangles.length
         if (trilen == 1)
         {
@@ -69,7 +69,7 @@ class BVHNode extends Primitive
         {
             // sort this.triangles along axis
             this.triangles.sort((tri1, tri2) => {
-                return tri1[axis] - tri2[axis]
+                return tri1.center[axis] - tri2.center[axis]
             })
             this.children.push(new BVHNode(this.triangles.slice(0, trilen/2), axis= (axis+1) % 3, {}, this.root))
             this.children.push(new BVHNode(this.triangles.slice(trilen/2), axis= (axis+1) % 3, {}, this.root))
@@ -275,12 +275,17 @@ class Triangle extends Primitive
         this.pointA = object.pointA
         this.pointB = object.pointB
         this.pointC = object.pointC
-        let A_C = new Vector(this.pointA).subtract(new Vector(this.pointC))
-        let B_C = new Vector(this.pointB).subtract(new Vector(this.pointC))
+        let vectorA = new Vector(this.pointA)
+        let vectorB = new Vector(this.pointB)
+        let vectorC = new Vector(this.pointC)
+        let A_C = vectorA.subtract(vectorC)
+        let B_C = vectorB.subtract(vectorC)
 
         this.n = A_C.crossProduct(B_C).normalize().negate()
 
-        if (eye.subtract(new Vector(this.pointA)).dotProduct(this.n) < 0)
+        this.center = vectorA.add(vectorB.add(vectorC)).scaleBy(1/3).components
+
+        if (eye.subtract(vectorA).dotProduct(this.n) < 0)
         {
             this.n = this.n.negate()
         }

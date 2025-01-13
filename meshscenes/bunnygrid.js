@@ -3,8 +3,8 @@
   "lookat": [0,-100,0],
   "up": [0,1,0],
   "fov_angle": 120,
-  "width": 700,
-  "height": 400,
+  "width":  1100,
+  "height": 700,
   "surfaces": [
 {"type": "mesh", "scale": [40, 40, 40], "obj": "bunny", "specular": [0.2, 0.2, 0.2], "mirror": [0, 0, 0], "phong_exponent": 20, "root": [-100.46499037665112, -45, -101.14712516481487], "ambient": [1.0, 0.0, 0.0], "diffuse": [1.0, 0.0, 0.0]},
 {"type": "mesh", "scale": [40, 40, 40], "obj": "bunny", "specular": [0.2, 0.2, 0.2], "mirror": [0, 0, 0], "phong_exponent": 20, "root": [-99.43710389215724, -45, -90.32027632598471], "ambient": [0.975, 0.0, 0.025], "diffuse": [0.975, 0.0, 0.025]},
@@ -455,14 +455,15 @@
       "ambient": [0,0,0],
       "diffuse": [0.5,0.5,0.6],
       "specular": [0.2,0.2,0.2],
-      "mirror": [0.1,0.1,0.1],
+      "mirror": [0.2,0.2,0.2],
       "phong_exponent": 20
     }
   ],
   "lights": [
     {
-      "position": [25,15,33],
-      "color": [0.8,0.8,0.8]
+      "position": [25000, 33000,33000],
+      "color": [0.8,0.8,0.8],
+      "intensity": 2599999999
     }
   ]
 }

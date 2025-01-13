@@ -33,17 +33,17 @@
         {
       "position": [50,-705,300],
       "color": [0,0,1.0],
-      "intensity": 900000
+      "intensity": 800000
     },
     {
       "position": [-250,-705,300],
       "color": [0,1.0,0],
-      "intensity": 900000
+      "intensity": 800000
     },
     {
       "position": [250,-705,300],
       "color": [1.0,0,0],
-      "intensity": 900000
+      "intensity": 800000
     }
 
 ]

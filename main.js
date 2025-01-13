@@ -61,6 +61,7 @@ function raytrace(scene){
     var l = -r
 
     var surfaces = []
+    console.time("load surfaces")
     scene.surfaces.forEach(function(surface){
         switch(surface.type) {
             case("sphere"):
@@ -80,6 +81,8 @@ function raytrace(scene){
                 break
         }
     })
+    console.timeEnd("load surfaces")
+
     var lights = []
     scene.lights.forEach(function(light){
         lights.push(new Light(light))
@@ -127,14 +130,7 @@ function raytrace(scene){
         }
     }
     ctx.putImageData(imageData, 0, 0)
-
-    surfaces.forEach(function(surface){
-        switch(surface.type) {
-            case("mesh"):
-                console.log("average depth", average(surface.depthList))
-                break
-        }
-    })}
+}
 
 /*
 eye: starting position
@@ -256,7 +252,7 @@ function colorPixel(hitPoint, lights, surfaces, eye, rayDir, hit, iter)
         }
 
         // Ideal Specular Reflection
-        if (colorIsNotBlack(hit.surface.mirror) && iter < 20)
+        if (colorIsNotBlack(hit.surface.mirror) && iter < 2)
         {
             let mirrorColor = mirror(hit, rayDir, hitPoint, surfaces, lights, iter)
             if (mirrorColor != null)

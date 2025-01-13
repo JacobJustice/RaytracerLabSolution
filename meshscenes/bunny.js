@@ -8,7 +8,7 @@
   "surfaces": [
     {
       "type": "mesh",
-      "root": [0,-3,0],
+      "root": [0,-3.05,0],
       "scale": [10,10,10],
       "obj": "bunny",
       "ambient": [0.39,0.58,0.93],
