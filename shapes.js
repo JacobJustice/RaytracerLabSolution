@@ -1,5 +1,4 @@
 import { Vector } from "./library/vector.js"
-import { Material } from "./material.js"
 
 
 class Primitive
