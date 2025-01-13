@@ -53,7 +53,6 @@ class BVHNode extends Primitive
     // calculates child nodes
     calculateChildren(object, axis)
     {
-        axis = 0
         this.children = []
         let trilen = this.triangles.length
         if (trilen == 1)
