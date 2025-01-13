@@ -1,4 +1,5 @@
 import { EPSILON } from './library/constants.js'
+import { parseOBJFile } from './library/OBJFile.js'
 
 async function parseJsonFile(file) {
     return new Promise((resolve, reject) => {
@@ -9,8 +10,16 @@ async function parseJsonFile(file) {
     })
 }
 
+async function loadScene(file) {
+    let scene = await parseJsonFile(file)
+    scene.bunny = await parseOBJFile('./obj/bunny.obj')
+    scene.dodecahedron =await parseOBJFile('./obj/dodecahedron.obj')
+    scene.cat =await parseOBJFile('./obj/cat.obj')
+    return scene
+}
+
 function imageDataFromCanvas(canvas, scene) {
-    var canvas = document.getElementById('canvas')
+    // var canvas = document.getElementById('canvas')
     canvas.width = scene.width
     canvas.height = scene.height
     var ctx = canvas.getContext('2d')
@@ -55,5 +64,6 @@ export {
     parseJsonFile,
     imageDataFromCanvas,
     colorIsNotBlack,
-    indexOfLowestNonNegativeValue
+    indexOfLowestNonNegativeValue,
+    loadScene
 }

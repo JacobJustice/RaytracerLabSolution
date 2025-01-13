@@ -1,13 +1,12 @@
-import {parseJsonFile
-    , imageDataFromCanvas
-    , colorIsNotBlack
-    , indexOfLowestNonNegativeValue} from './helper.js'
+import {imageDataFromCanvas,
+        colorIsNotBlack,
+        indexOfLowestNonNegativeValue,
+        loadScene} from './helper.js'
 import {Vector} from './library/vector.js'
 import { EPSILON } from './library/constants.js'
 import {Light, Sphere, Plane} from './shapes.js'
 import { Triangle, Mesh, AABB } from './mesh.js'
 
-import { parseOBJFile } from './library/OBJFile.js'
 /*
 Author: Jacob Justice
 Assignment 03: Ray Tracing
@@ -28,10 +27,8 @@ const average = array => array.reduce((a, b) => a + b) / array.length;
 // on button click, load the scene file and raytrace that scene
 var scene = null;
 document.getElementById('submit').onclick = async function() {
-    scene = await parseJsonFile(myfile.files[0])
-    scene.bunny = await parseOBJFile('./obj/bunny.obj')
-    scene.dodecahedron =await parseOBJFile('./obj/dodecahedron.obj')
-    scene.cat =await parseOBJFile('./obj/cat.obj')
+    console.log(myfile.files[0])
+    scene = await loadScene(myfile.files[0])
     console.time('raytrace')
     raytrace(scene)
     console.timeEnd('raytrace')
@@ -39,49 +36,28 @@ document.getElementById('submit').onclick = async function() {
 // -------- DO NOT EDIT ABOVE --------
 
 function raytrace(scene){
-    var [imageData, ctx] = imageDataFromCanvas(document.getElementById('canvas'), scene)
     console.log(scene)
+    var [imageData, ctx] = imageDataFromCanvas(document.getElementById('canvas'), scene)
 
     // run raytracing algorithm on the scene
     var eye = new Vector(scene.eye) // location of the eye
     var up = new Vector(scene.up) // up vector
     var lookat = new Vector(scene.lookat) // point the eye is looking at
     
-    var forwardDir = lookat.subtract(eye)
-    var focalLength = forwardDir.length()// save for later use
-    var forward = forwardDir.normalize() //-w
-    var right = forward.crossProduct(up).normalize() // u
-    var eyeup = forward.crossProduct(right).normalize() // v
+    var forwardDir = lookat.subtract(eye);
+    var focalLength = forwardDir.length();// save for later use
+    var forward = forwardDir.normalize(); //-w
+    var right = forward.crossProduct(up).normalize(); // u
+    var eyeup = forward.crossProduct(right).normalize(); // v
 
-    var heightWidthRatio = scene.width/scene.height
-    var fov_rads = scene.fov_angle*(Math.PI/180)
-    var t = Math.tan(fov_rads/2)*focalLength
-    var b = -t
-    var r = heightWidthRatio*(t)
-    var l = -r
+    var heightWidthRatio = scene.width/scene.height;
+    var fov_rads = scene.fov_angle*(Math.PI/180);
+    var t = Math.tan(fov_rads/2)*focalLength;
+    var b = -t;
+    var r = heightWidthRatio*(t);
+    var l = -r;
 
-    var surfaces = []
-    console.time("load surfaces")
-    scene.surfaces.forEach(function(surface){
-        switch(surface.type) {
-            case("sphere"):
-                surfaces.push(new Sphere(surface))
-                break
-            case("plane"):
-                surfaces.push(new Plane(surface, eye))
-                break
-            case("triangle"):
-                surfaces.push(new Triangle(surface, eye))
-                break
-            case("aabb"):
-                surfaces.push(new AABB(surface, eye))
-                break
-            case("mesh"):
-                surfaces.push(new Mesh(surface, eye, scene[surface.obj]))
-                break
-        }
-    })
-    console.timeEnd("load surfaces")
+    var surfaces = loadSurfaces(scene, eye);
 
     var lights = []
     scene.lights.forEach(function(light){
@@ -130,6 +106,31 @@ function raytrace(scene){
         }
     }
     ctx.putImageData(imageData, 0, 0)
+}
+
+function loadSurfaces(scene, eye)
+{
+    let surfaces = [];
+    scene.surfaces.forEach(function(surface){
+        switch(surface.type) {
+            case("sphere"):
+                surfaces.push(new Sphere(surface));
+                break;
+            case("plane"):
+                surfaces.push(new Plane(surface, eye));
+                break;
+            case("triangle"):
+                surfaces.push(new Triangle(surface, eye));
+                break;
+            case("aabb"):
+                surfaces.push(new AABB(surface, eye));
+                break;
+            case("mesh"):
+                surfaces.push(new Mesh(surface, eye, scene[surface.obj]));
+                break;
+        }
+    })
+    return surfaces;
 }
 
 /*
@@ -269,5 +270,5 @@ function colorPixel(hitPoint, lights, surfaces, eye, rayDir, hit, iter)
     // let outColor = hit.surface.normal(hitPoint).scaleBy(255)
     outColor = outColor.add(ambient(hit.surface))
     return outColor.components
-    return new Vector(hit.surface.diffuse).scaleBy(255).components
+    // return new Vector(hit.surface.diffuse).scaleBy(255).components
 }
