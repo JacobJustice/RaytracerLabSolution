@@ -1,5 +1,6 @@
 import { Vector } from "./library/vector.js"
 
+
 class Primitive
 {
     constructor(object){
