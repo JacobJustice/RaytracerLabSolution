@@ -217,19 +217,6 @@ class AABB extends Primitive
             return new Hit(-1, this); // No hit
         }
         return new Hit(tNear > 0 ? tNear : tFar, this); // Hit detected
-
-        // if within the bounds of the polygons that make up the box
-        if (t_minX > t_maxY || t_minX > t_maxZ ||
-            t_minY > t_maxX || t_minY > t_maxZ ||
-            t_minZ > t_maxX || t_minZ > t_maxY ||
-            t_maxX < 0 || t_maxY < 0 || t_maxZ < 0)
-        {
-            return new Hit(-1, this)
-        }
-        else
-        {
-            return new Hit(1, this)
-        }
     }
     normal(hitPoint)
     {

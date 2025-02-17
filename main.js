@@ -22,7 +22,7 @@ Meshes are implemented using a bounding volume hierarchy as a means of optimizat
 
 var AMBIENT_LIGHT=.2
 
-const average = array => array.reduce((a, b) => a + b) / array.length;
+// const average = array => array.reduce((a, b) => a + b) / array.length;
 
 // -------- DO NOT EDIT  --------
 // on button click, load the scene file and raytrace that scene
@@ -269,5 +269,4 @@ function colorPixel(hitPoint, lights, surfaces, eye, rayDir, hit, iter)
     // let outColor = hit.surface.normal(hitPoint).scaleBy(255)
     outColor = outColor.add(ambient(hit.surface))
     return outColor.components
-    return new Vector(hit.surface.diffuse).scaleBy(255).components
 }
