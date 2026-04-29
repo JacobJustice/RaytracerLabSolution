@@ -28,7 +28,6 @@ class Primitive
         return null
     }
 }
-
 class Sphere extends Primitive
 {    
     constructor(object){
@@ -51,6 +50,7 @@ class Sphere extends Primitive
         }
         return new Hit(t_, this)
     }
+    
     normal(hitPoint)
     {
         return hitPoint.subtract(this.center).normalize()

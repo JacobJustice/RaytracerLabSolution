@@ -49,8 +49,9 @@
   ],
   "lights": [
     {
-      "position": [0,3,0],
-      "color": [0.8,0.8,0.6]
+      "position": [2,5,5],
+      "color": [0.8,0.8,0.6],
+      "intensity": 25
     }
   ]
 }

@@ -34,6 +34,9 @@
       "position": [30,30,50],
       "color": [0.8,0.8,0.8],
       "intensity": 5000
+      "position": [30,30,50],
+      "color": [0.8,0.8,0.8],
+      "intensity": 5000
     }
   ]
 }
