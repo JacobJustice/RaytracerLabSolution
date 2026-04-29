@@ -36,6 +36,7 @@ function indexOfLowestNonNegativeValue(arr) {
     let minIndex = -1;
     let minValue = Infinity;
     for (let i = 0; i < arr.length; i++) {
+        // console.log(arr);
         if (arr[i].t > EPSILON &&
             arr[i].t < minValue) {
           minValue = arr[i].t;

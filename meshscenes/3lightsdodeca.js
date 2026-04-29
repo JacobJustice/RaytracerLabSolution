@@ -23,7 +23,9 @@
       "normal": [0,0,1],
       "ambient": [0.5,0.5,0.5],
       "diffuse": [1.0,1.0,1.0],
+      "diffuse": [1.0,1.0,1.0],
       "specular": [0.2,0.2,0.2],
+      "mirror": [0.3,0.3,0.3],
       "mirror": [0.3,0.3,0.3],
       "phong_exponent": 20
     }
@@ -33,18 +35,19 @@
         {
       "position": [50,-705,300],
       "color": [0,0,1.0],
-      "intensity": 900000
+      "intensity": 800000
     },
     {
       "position": [-250,-705,300],
       "color": [0,1.0,0],
-      "intensity": 900000
+      "intensity": 800000
     },
     {
       "position": [250,-705,300],
       "color": [1.0,0,0],
-      "intensity": 900000
+      "intensity": 800000
     }
+
 
 ]
 }

@@ -8,7 +8,7 @@
   "surfaces": [
     {
       "type": "mesh",
-      "root": [0,-3,0],
+      "root": [0,-3.05,0],
       "scale": [10,10,10],
       "obj": "bunny",
       "ambient": [0.39,0.58,0.93],
@@ -25,12 +25,15 @@
       "ambient": [0.5,0.5,0.5],
       "diffuse": [0.5,0.5,0.5],
       "specular": [0.2,0.2,0.2],
-      "mirror": [0.0,0.0,0.0],
+      "mirror": [0.2,0.2,0.2],
       "phong_exponent": 20
     }
   ],
   "lights": [
     {
+      "position": [30,30,50],
+      "color": [0.8,0.8,0.8],
+      "intensity": 5000
       "position": [30,30,50],
       "color": [0.8,0.8,0.8],
       "intensity": 5000

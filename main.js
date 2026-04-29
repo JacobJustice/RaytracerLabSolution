@@ -63,6 +63,7 @@ function raytrace(scene){
     var l = -r
 
     var surfaces = []
+    console.time("load surfaces")
     scene.surfaces.forEach(function(surface){
         switch(surface.type) {
             case("sphere"):
@@ -82,6 +83,8 @@ function raytrace(scene){
                 break
         }
     })
+    console.timeEnd("load surfaces")
+
     var lights = []
     scene.lights.forEach(function(light){
         lights.push(new Light(light))
